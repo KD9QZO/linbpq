@@ -1,0 +1,25 @@
+#
+# .gitignore
+#
+
+## BACKUP & TEMPORARY FILES ##
+
+*~
+*.bak
+*.tmp
+
+
+## BUILD ARTIFACTS ##
+
+*.o
+*.d
+*.i
+*.map
+linbpq
+
+
+## CMAKE ##
+
+build/
+build-*/
+cmake-*/
