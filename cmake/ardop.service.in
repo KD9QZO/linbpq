@@ -1,0 +1,16 @@
+[Unit]
+Description=ARDOP daemon
+
+[Service]
+Type=simple
+ExecStart=@CMAKE_INSTALL_PREFIX@/bin/ardop1ofdm @ARDOP_TCP_PORT@ -c @ARDOP_CAT_TTY_DEVICE@ ARDOP ARDOP -k FEFE88E01C0001FD -u FEFE88E01C0000FD
+ExecStop=/usr/bin/killall -s QUIT ardop
+IgnoreSIGPIPE=no
+#StandardOutput=null
+#StandardError=null
+StandardOutput=syslog
+StandardError=syslog
+Nice=-11
+
+[Install]
+WantedBy=multi-user.target
