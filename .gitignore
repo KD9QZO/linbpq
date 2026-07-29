@@ -1,0 +1,21 @@
+#
+# .gitignore
+#
+
+## BACKUP & TEMPORARY FILES ##
+
+*~
+*.bak
+*.tmp
+*.log
+
+
+## BUILD ARTIFACTS ##
+
+*.o
+*.d
+XAprs
+linbpq
+linbpq.map
+
+logs/*
