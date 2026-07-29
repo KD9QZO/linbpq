@@ -19,3 +19,13 @@ linbpq
 linbpq.map
 
 logs/*
+
+build/
+build*/
+build-*/
+
+
+## MISC FILES ##
+
+all_*_files.txt
+
