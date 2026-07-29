@@ -59,35 +59,34 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 //#include "packet32.h"
 //#include "ntddndis.h"
  
-extern char * PortConfig[33];
+ 
+extern char *PortConfig[33];
 
-typedef struct PCAPStruct
-{
-   pcap_t	*adhandle;
-   UCHAR	EthSource[6];
-   UCHAR	EthDest[6];
-   short	EtherType;
-   BOOL		RLITX;
-   BOOL		RLIRX;
-   BOOL		Promiscuous;
-   int		pcap_reopen_delay;
-   char		Adapter[256];
+typedef struct PCAPStruct {
+	pcap_t *adhandle;
+	UCHAR EthSource[6];
+	UCHAR EthDest[6];
+	short EtherType;
+	BOOL RLITX;
+	BOOL RLIRX;
+	BOOL Promiscuous;
+	int pcap_reopen_delay;
+	char Adapter[256];
+} PCAPINFO, *PPCAPINFO;
 
-} PCAPINFO, *PPCAPINFO ;
+PCAPINFO *PCAPInfo[32];
 
-PCAPINFO * PCAPInfo[32];
+//PPCAPINFO PCAPInfo[16] = { 0 };
 
-//PPCAPINFO PCAPInfo[16]={0};
+UCHAR EthDest[7] = { 01, 'B', 'P', 'Q', 0, 0 };
 
-UCHAR EthDest[7]={01,'B','P','Q',0,0};
-
-char EtherType[10]="0x08FF";
+char EtherType[10] = "0x08FF";
 
 //pcap_t *adhandle;
 
 struct tagMSG Msg;
 
-short udpport=0;
+short udpport = 0;
 
 extern UCHAR BPQDirectory[];
 
@@ -100,195 +99,165 @@ DWORD n;
 
 #ifdef WIN32
 
-static HINSTANCE PcapDriver=0;
+static HINSTANCE PcapDriver = 0;
 
 typedef int (FAR *FARPROCX)();
 
-int (FAR * pcap_sendpacketx)();
+int (FAR *pcap_sendpacketx)();
 
 FARPROCX pcap_compilex;
 FARPROCX pcap_setfilterx;
 FARPROCX pcap_datalinkx;
 FARPROCX pcap_next_exx;
 FARPROCX pcap_geterrx;
-pcap_t * (FAR * pcap_open_livex)(const char *, int, int, int, char *);
+pcap_t *(FAR *pcap_open_livex)(const char*, int, int, int, char*);
 
-static char Dllname[6]="wpcap";
+static char Dllname[6] = "wpcap";
 
-FARPROCX GetAddress(char * Proc);
+FARPROCX GetAddress(char *Proc);
 
 #else
 
-#define pcap_compilex pcap_compile
-#define pcap_open_livex pcap_open_live
-#define pcap_setfilterx pcap_setfilter
-#define pcap_datalinkx pcap_datalink
-#define pcap_next_exx pcap_next_ex
-#define pcap_geterrx pcap_geterr
-#define pcap_sendpacketx pcap_sendpacket
+#define pcap_compilex		pcap_compile
+#define pcap_open_livex		pcap_open_live
+#define pcap_setfilterx		pcap_setfilter
+#define pcap_datalinkx		pcap_datalink
+#define pcap_next_exx		pcap_next_ex
+#define pcap_geterrx		pcap_geterr
+#define pcap_sendpacketx	pcap_sendpacket
+
 #endif
 
 int InitPCAP(void);
-static FARPROCX GetAddress(char * Proc);
+static FARPROCX GetAddress(char *Proc);
 
 static BOOL ReadConfigFile(int Port);
-static int ProcessLine(char * buf,int Port, BOOL CheckPort);
+static int ProcessLine(char *buf, int Port, BOOL CheckPort);
 static int OpenPCAP(PPCAPINFO PCAP);
 
 
-int ExtProc(int fn, int port,unsigned char * buff)
-{
-	int len,txlen=0,res;
+int ExtProc(int fn, int port, unsigned char *buff) {
+	int le;
+	int txlen = 0;
+	int res;
 	char txbuff[500];
 	struct pcap_pkthdr *header;
 	u_char *pkt_data;
 	PPCAPINFO PCAP = PCAPInfo[port];
+//	char dcall[10];
+//	char scall[10];
 
-	//	char dcall[10],scall[10];
-
-	if (PCAP->adhandle == 0)
-	{
+	if (PCAP->adhandle == 0) {
 		// No handle. 
-		
-		if (PCAP->Adapter[0])	
-		{
+		if (PCAP->Adapter[0]) {
 			// Try reopening periodically
-			
-			PCAP->pcap_reopen_delay --;
-			
+			PCAP->pcap_reopen_delay--;
+
 			if (PCAP->pcap_reopen_delay < 0)
 				if (OpenPCAP(PCAP) == FALSE)
 					PCAP->pcap_reopen_delay = 300;	// Retry every 30 seconds
 		}
 		return 0;
 	}
-	switch (fn)
-	{
-	case 1:				// poll
 
-		res = pcap_next_exx(PCAP->adhandle, &header, &pkt_data);
+	switch (fn) {
+		case 1:				// poll
+			res = pcap_next_exx(PCAP->adhandle, &header, &pkt_data);
 
-		if (res == 0)
-			/* Timeout elapsed */
-			return 0;
-
-		if (res == -1)
-		{
-			// Failed - try to reopen
-			
-			if (OpenPCAP(PCAP) == FALSE)
-				PCAP->pcap_reopen_delay = 300;
-			return 0;
-		}
-
-		if (PCAP->RLIRX)
-		
-		//	RLI MODE - An extra 3 bytes before len, seem to be 00 00 41
-
-		{
-			len=pkt_data[18]*256 + pkt_data[17];
-
-			if ((len < 16) || (len > 320)) return 0; // Probably BPQ Mode Frame
-
-			len-=3;
-		
-			memcpy(&buff[7],&pkt_data[19],len);
-		
-			len+=5;
-		}
-		else
-		{
-			len=pkt_data[15]*256 + pkt_data[14];
-
-			if ((len < 16) || (len > 320)) return 0; // Probably RLI Mode Frame
-
-			len-=3;
-		
-			memcpy(&buff[7],&pkt_data[16],len);
-		
-			len+=5;
-		}
-
-		buff[5]=(len & 0xff);
-		buff[6]=(len >> 8);
-		
-		return 1;
-
-		
-	case 2:				// send
-		
- 		if (PCAP->RLITX)
-		
-		//	RLI MODE - An extra 3 bytes before len, seem to be 00 00 41
-
-		{
-			txlen=(buff[6]<<8) + buff[5];		// BPQEther is DOS-based - chain word is 2 bytes
-
-			txlen-=2;
-			txbuff[16]=0x41;
-			txbuff[17]=(txlen & 0xff);
-			txbuff[18]=(txlen >> 8);
-
-			if (txlen < 1 || txlen > 400)
-				return 0;
-			
-			memcpy(&txbuff[19],&buff[7],txlen);
-
-		}
-		else
-		{
-			txlen=(buff[6]<<8) + buff[5];		// BPQEther is DOS-based - chain word is 2 bytes
-
-			txlen-=2;
-
-			txbuff[14]=(txlen & 0xff);
-			txbuff[15]=(txlen >> 8);
-
-			if (txlen < 1 || txlen > 400)
+			if (res == 0)
+				/* Timeout elapsed */
 				return 0;
 
+			if (res == -1) {
+				// Failed - try to reopen
+				if (OpenPCAP(PCAP) == FALSE)
+					PCAP->pcap_reopen_delay = 300;
+				return 0;
+			}
 
-			memcpy(&txbuff[16],&buff[7],txlen);
-		}
+			if (PCAP->RLIRX) {
+				//	RLI MODE - An extra 3 bytes before len, seem to be 00 00 41
+				len = pkt_data[18] * 256 + pkt_data[17];
+				if ((len < 16) || (len > 320)) return 0; // Probably BPQ Mode Frame
 
-		memcpy(&txbuff[0],&PCAP->EthDest[0],6);
-		memcpy(&txbuff[6],&PCAP->EthSource[0],6);
-		memcpy(&txbuff[12],&PCAP->EtherType,2);
-
-		txlen+=14;
-		
-
-		if (txlen < 60) txlen = 60;
-
-		// Send down the packet 
-
-		if (pcap_sendpacketx(PCAP->adhandle,	// Adapter
-			txbuff,				// buffer with the packet
-			txlen				// size
-			) != 0)
-		{
-
-	//		n=sprintf(buf,"\nError sending the packet: \n", pcap_geterrx(PCAPInfo[port].adhandle));		
-	//		WritetoConsole(buf);
+				len -= 3;
 			
-			return 3;
-		}
+				memcpy(&buff[7], &pkt_data[19], len);
+			
+				len += 5;
+			} else {
+				len=pkt_data[15]*256 + pkt_data[14];
 
+				if ((len < 16) || (len > 320)) return 0; // Probably RLI Mode Frame
 
-		return (0);
+				len-=3;
+			
+				memcpy(&buff[7],&pkt_data[16],len);
+			
+				len+=5;
+			}
 
+			buff[5]=(len & 0xff);
+			buff[6]=(len >> 8);
+			
+			return 1;
 
-	case 3:				// CHECK IF OK TO SEND
+		case 2:				// send
+	 		if (PCAP->RLITX) {
+				//	RLI MODE - An extra 3 bytes before len, seem to be 00 00 41
+				txlen=(buff[6]<<8) + buff[5];		// BPQEther is DOS-based - chain word is 2 bytes
 
-		return (0);		// OK	
+				txlen-=2;
+				txbuff[16]=0x41;
+				txbuff[17]=(txlen & 0xff);
+				txbuff[18]=(txlen >> 8);
 
-	case 4:				// reinit
+				if (txlen < 1 || txlen > 400)
+					return 0;
+				
+				memcpy(&txbuff[19],&buff[7],txlen);
+			} else {
+				txlen = (buff[6] << 8) + buff[5];		// BPQEther is DOS-based - chain word is 2 bytes
 
-		return 0;
+				txlen -= 2;
 
-	case 5:				// reinit
+				txbuff[14] = (txlen & 0xff);
+				txbuff[15] = (txlen >> 8);
 
-		return 0;
+				if (txlen < 1 || txlen > 400)
+					return 0;
+
+				memcpy(&txbuff[16], &buff[7], txlen);
+			}
+
+			memcpy(&txbuff[0], &PCAP->EthDest[0], 6);
+			memcpy(&txbuff[6], &PCAP->EthSource[0], 6);
+			memcpy(&txbuff[12], &PCAP->EtherType, 2);
+
+			txlen += 14;
+			if (txlen < 60) txlen = 60;
+
+			// Send down the packet 
+			if (pcap_sendpacketx(PCAP->adhandle,	// Adapter
+					txbuff,							// buffer with the packet
+					txlen							// size
+					) != 0) {
+//				n = sprintf(buf, "\nError sending the packet: \n", pcap_geterrx(PCAPInfo[port].adhandle));
+//				WritetoConsole(buf);
+
+				return 3;
+			}
+
+			return (0);
+
+		case 3:				// CHECK IF OK TO SEND
+			return (0);		// OK
+
+		case 4:				// reinit
+			return 0;
+
+		case 5:				// reinit
+			return 0;
 	}
 
 	return (0);

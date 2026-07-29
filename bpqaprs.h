@@ -1,23 +1,25 @@
 
-#define OurSetItemText(hwndLV, i, iSubItem_, pszText_) \
-{ LV_ITEM _ms_lvi;\
-  _ms_lvi.iSubItem = iSubItem_;\
-  _ms_lvi.pszText = pszText_;\
-  SNDMSG((hwndLV), LVM_SETITEMTEXT, (WPARAM)i, (LPARAM)(LV_ITEM FAR *)&_ms_lvi);\
-}
+#ifndef BPQAPRS_H_
+#define BPQAPRS_H_
+
+
+#define OurSetItemText(hwndLV, i, iSubItem_, pszText_)																\
+		{ LV_ITEM _ms_lvi;																							\
+			_ms_lvi.iSubItem = iSubItem_;																			\
+			_ms_lvi.pszText = pszText_;																				\
+			SNDMSG((hwndLV), LVM_SETITEMTEXT, (WPARAM)i, (LPARAM)(LV_ITEM FAR*)&_ms_lvi);							\
+		}
 
 #define TRACKPOINTS 100
 
-struct SORTLIST
-{
-	char Callsign[12];
-	struct STATIONRECORD * Rec;
 
+struct SORTLIST {
+	char Callsign[12];
+	struct STATIONRECORD *Rec;
 } SortList;
 
-struct STATIONRECORD
-{  
-	struct STATIONRECORD * Next;
+struct STATIONRECORD {
+	struct STATIONRECORD *Next;
 	char Callsign[12];
 	char Path[120];
 	char Status[256];
@@ -26,27 +28,27 @@ struct STATIONRECORD
 	char spare1;
 	char spare2;
 	char spare3;
-	void * image;				// used in QtBPQAPRS 
+	void *image;				// used in QtBPQAPRS 
 	char LastWXPacket[256];
 	int LastPort;
-    double Lat;
-    double Lon;
-    double Course;
-    double Speed;
-    double Heading;
-    double LatIncr;
-    double LongIncr;
-    double LastCourse;
-    double LastSpeed;
-    double Distance;
-    double Bearing;
+	double Lat;
+	double Lon;
+	double Course;
+	double Speed;
+	double Heading;
+	double LatIncr;
+	double LongIncr;
+	double LastCourse;
+	double LastSpeed;
+	double Distance;
+	double Bearing;
 	double LatTrack[TRACKPOINTS];	// Cyclic Tracklog
 	double LonTrack[TRACKPOINTS];
 	time_t TrackTime[TRACKPOINTS];
 	int Trackptr;					// Next record in Tracklog
 	BOOL Moved;						// Moved since last drawn
-    time_t TimeAdded;
-    time_t TimeLastUpdated;
+	time_t TimeAdded;
+	time_t TimeLastUpdated;
 	UCHAR Symbol;
 	int iconRow;
 	int iconCol;					// Symbol Pointer
@@ -60,14 +62,11 @@ struct STATIONRECORD
 	char LastRXSeq[6];				// Seq from last received message (used for Reply-Ack system)
 	BOOL SimpleNumericSeq;			// Station treats seq as a number, not a text field
 	struct STATIONRECORD * Object;	// Set if last record from station was an object
-    time_t TimeLastTracked;			// Time of last trackpoint
+	time_t TimeLastTracked;			// Time of last trackpoint
 	int NextSeq;
-
 } StationRecord;
 
-
-typedef struct _APRSHEARDRECORD
-{
+typedef struct _APRSHEARDRECORD {
 	UCHAR MHCALL[10];				// Stored with space padding
 	time_t MHTIME;					// Time last heard
  	time_t LASTMSG;					// Time last message sent from this station (via IS)
@@ -75,24 +74,19 @@ typedef struct _APRSHEARDRECORD
 	int heardViaIS;					
 	BOOL IGate;						// Set if station is an IGate;
 //	BYTE MHDIGI[56];				// Not sure if we need this
-	struct STATIONRECORD * Station;	// Info previously held by APRS Application
-
+	struct STATIONRECORD *Station;	// Info previously held by APRS Application
 } APRSHEARDRECORD, *PAPRSHEARDRECORD;
 
-
-
-struct OSMQUEUE
-{
-	struct OSMQUEUE * Next;
+struct OSMQUEUE {
+	struct OSMQUEUE *Next;
 	int	Zoom;
 	int x;
 	int y;
 };
 
-struct APRSMESSAGE
-{
-	struct APRSMESSAGE * Next;
-	struct STATIONRECORD * ToStation;	// Set on messages we send
+struct APRSMESSAGE {
+	struct APRSMESSAGE *Next;
+	struct STATIONRECORD *ToStation;	// Set on messages we send
 	char FromCall[12];
 	char ToCall[12];
 	char Text[104];
@@ -105,50 +99,56 @@ struct APRSMESSAGE
 	BOOL Cancelled;
 };
 
-struct APRSConnectionInfo			// Used for Web Server for thread-specific stuff
-{
-	struct STATIONRECORD * SelCall;	// Station Record for individual staton display
+struct APRSConnectionInfo {			// Used for Web Server for thread-specific stuff
+	struct STATIONRECORD *SelCall;	// Station Record for individual station display
 	HANDLE hPipe;
 	SOCKET sock;
 	char Callsign[12];
-	int WindDirn, WindSpeed, WindGust, Temp, RainLastHour, RainLastDay, RainToday, Humidity, Pressure; //WX Fields
+	int WindDirn;					/*!< Wind Direction */
+	int WindSpeed;					/*!< Wind Speed */
+	int WindGust;					/*!< Wind Gusts */
+	int Temp;						/*!< Temperature */
+	int RainLastHour;				/*!< Rain in the last hour */
+	int RainLastDay;				/*!< Rain in the last day */
+	int RainToday;					/*!< Rain today */
+	int Humidity;					/*!< Relative Humidity */
+	int Pressure;					/*!< Barometric Pressure */
 };
 
-// This defines the layout of the first few bytes of shared memory to simplify access
-// from both node and gui application
-
-struct SharedMem
-{
-	// Max 32 bytes unless code is changed. Also don't change existing items
-	// without changing version and clients
-
+// This defines the layout of the first few bytes of shared memory to simplify access from both node and GUI application
+struct SharedMem {
+	// Max 32 bytes unless code is changed. Also don't change existing items without changing version and clients
 	UCHAR Version;				// For compatibility check
 	UCHAR NeedRefresh;			// Messages Have Changed
 	UCHAR ClearRX;
 	UCHAR ClearTX;
 	int SharedMemLen;			// So Client knows size to map
 
-	struct APRSMESSAGE * Messages;
-	struct APRSMESSAGE * OutstandingMsgs;
+	struct APRSMESSAGE *Messages;
+	struct APRSMESSAGE *OutstandingMsgs;
 
 	int Arch;					 // to detect running on 64 bit system.
 #pragma pack(1)
 	UCHAR SubVersion;
-
-
-
 #pragma pack()
 };
 
-#define BPQBASE     WM_USER
-//
-//	Port monitoring flags use BPQBASE -> BPQBASE+16
 
-#define BPQMTX	      BPQBASE+40
-#define BPQMCOM	      BPQBASE+41
-//#define BPQCOPY       BPQBASE+42
+#define BPQBASE			WM_USER
+
+//
+//	Port monitoring flags use BPQBASE -> BPQBASE + 16
+
+#define BPQMTX			(BPQBASE + 40)
+#define BPQMCOM			(BPQBASE + 41)
+//#define BPQCOPY		(BPQBASE + 42)
+
 
 #define APRSSHAREDMEMORYBASE 0x43000000		// Base of shared memory segment
 
 #define MAXSTATIONS 5000
-#define MAXMESSAGES 1000 
+#define MAXMESSAGES 1000
+
+
+#endif	/* !BPQAPRS_H_ */
+

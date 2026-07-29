@@ -1,4 +1,11 @@
 
+#ifndef VERSIONS_H_
+#define VERSIONS_H_
+
+
+
+#if defined(WIN32)
+
 #ifdef Kernel
 
 #define Vers 5,2,9,2
@@ -124,3 +131,114 @@
 #define VerProduct "BPQChat"
 
 #endif
+
+#else	/* defined(WIN32) */
+
+#ifdef Kernel
+#define Vers 5,2,9,2
+#define Verstring "5.2.9.2"
+#define Datestring "September 2012"
+#define VerComments "G8BPQ Packet Switch V5.2.9.2"
+#define VerCopyright "Copyright © 2001-2012 John Wiseman G8BPQ"
+#define VerDesc "BPQ32 Switch"
+#endif
+
+
+#define KVers 6,0,25,36
+#define KVerstring "6.0.25.36"
+
+
+#ifdef CKernel
+#define Vers KVers
+#define Verstring KVerstring
+#define Datestring "July 2026"
+#define VerComments "G8BPQ Packet Switch (C Version)" KVerstring
+#define VerCopyright "Copyright © 2001-2026 John Wiseman G8BPQ"
+#define VerDesc "BPQ32 Switch"
+#define VerProduct "BPQ32"
+#endif
+
+#ifdef TermTCP
+#define Vers 1,0,16,2
+#define Verstring "1.0.16.2"
+#define VerComments "Internet Terminal for G8BPQ Packet Switch"
+#define VerCopyright "Copyright © 2011-2026 John Wiseman G8BPQ"
+#define VerDesc "Simple TCP Terminal Program for G8BPQ Switch"
+#define VerProduct "BPQTermTCP"
+#endif
+
+#ifdef BPQTerm
+#define Vers 2,2,5,2
+#define Verstring "2.2.5.2"
+#define VerComments "Simple Terminal for G8BPQ Packet Switch"
+#define VerCopyright "Copyright © 1999-2026 John Wiseman G8BPQ"
+#define VerDesc "Simple Terminal Program for G8BPQ Switch"
+#define VerProduct "BPQTerminal"
+#endif
+
+#ifdef BPQTermMDI
+#define Vers 2,2,0,3
+#define Verstring "2.2.0.3"
+#define VerComments "MDI Terminal for G8BPQ Packet Switch"
+#define VerCopyright "Copyright © 1999-2026 John Wiseman G8BPQ"
+#define VerDesc "MDI Terminal Program for G8BPQ Switch"
+#endif
+
+#ifdef MAIL
+#define Vers KVers
+#define Verstring KVerstring
+#define VerComments "Mail server for G8BPQ Packet Switch"
+#define VerCopyright "Copyright © 2009-2026 John Wiseman G8BPQ"
+#define VerDesc "Mail server for G8BPQ's 32 Bit Switch"
+#define VerProduct "BPQMail"
+#endif
+
+#ifdef HOSTMODES
+#define Vers 1,1,8,1
+#define Verstring "1.1.8.1"
+//#define SPECIALVERSION "Test 3"
+#define VerComments "Host Modes Emulator for G8BPQ Packet Switch"
+#define VerCopyright "Copyright © 2009-2019 John Wiseman G8BPQ"
+#define VerDesc "Host Modes Emulator for G8BPQ's 32 Bit Switch"
+#define VerProduct "BPQHostModes"
+#endif
+
+#ifdef UIUTIL
+#define Vers 0,1,3,1
+#define Verstring "0.1.3.1"
+#define VerComments "Beacon Utility for G8BPQ Packet Switch"
+#define VerCopyright "Copyright © 2011-2019 John Wiseman G8BPQ"
+#define VerDesc "Beacon Utility for G8BPQ Switch"
+#define VerProduct "BPQUIUtil"
+#endif
+
+#ifdef AUTH
+#define Vers 0,1,0,0
+#define Verstring "0.1.0.0"
+#define VerComments "Password Generation Utility for G8BPQ Packet Switch"
+#define VerCopyright "Copyright © 2011-2026 John Wiseman G8BPQ"
+#define VerDesc "Password Generation Utility for G8BPQ Switch"
+#endif
+
+#ifdef APRS
+#define Vers KVers
+#define Verstring KVerstring
+#define VerComments  "APRS Client for G8BPQ Switch"
+#define VerCopyright "Copyright © 2012-2026 John Wiseman G8BPQ"
+#define VerDesc "APRS Client for G8BPQ Switch"
+#define VerProduct "BPQAPRS"
+#endif
+
+#ifdef CHAT
+#define Vers KVers
+#define Verstring KVerstring
+#define VerComments "Chat server for G8BPQ Packet Switch"
+#define VerCopyright "Copyright © 2009-2026 John Wiseman G8BPQ"
+#define VerDesc "Chat server for G8BPQ's 32 Bit Switch"
+#define VerProduct "BPQChat"
+#endif
+
+#endif	/* !defined(WIN32) */
+
+#endif	/* !VERSIONS_H_ */
+

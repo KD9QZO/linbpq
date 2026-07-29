@@ -129,30 +129,30 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 
 #include "configstructs.h"
 
+
 // KISS Options Equates
-
-#define CHECKSUM 1
-#define POLLINGKISS	2			// KISSFLAGS BITS
-#define ACKMODE	4				// CAN USE ACK REQURED FRAMES
-#define POLLEDKISS	8			// OTHER END IS POLLING US
-#define D700 16					// D700 Mode (Escape "C" chars
-#define TNCX 32					// TNC-X Mode (Checksum of ACKMODE frames includes ACK bytes
-#define PITNC 64				// PITNC Mode - can reset TNC with FEND 15 2
-#define NOPARAMS 128			// Don't send SETPARAMS frame
-#define FLDIGI 256				// Support FLDIGI COmmand Frames
-#define TRACKER 512				// SCS Tracker. Need to set KISS Mode 
-#define FASTI2C 1024			// Use BLocked I2C Reads (like ARDOP)
-#define DRATS 2048
-
+#define CHECKSUM		1
+#define POLLINGKISS		2			// KISSFLAGS BITS
+#define ACKMODE			4			// CAN USE ACK REQURED FRAMES
+#define POLLEDKISS		8			// OTHER END IS POLLING US
+#define D700			16			// D700 Mode (Escape "C" chars
+#define TNCX			32			// TNC-X Mode (Checksum of ACKMODE frames includes ACK bytes
+#define PITNC			64			// PITNC Mode - can reset TNC with FEND 15 2
+#define NOPARAMS		128			// Don't send SETPARAMS frame
+#define FLDIGI			256			// Support FLDIGI COmmand Frames
+#define TRACKER			512			// SCS Tracker. Need to set KISS Mode 
+#define FASTI2C			1024		// Use BLocked I2C Reads (like ARDOP)
+#define DRATS			2048
 
 
-struct WL2KInfo * DecodeWL2KReportLine(char *  buf);
+
+struct WL2KInfo *DecodeWL2KReportLine(char * buf);
 
 // Dummy file routines - write to buffer instead
 
-char * PortConfig[70];
-char * RadioConfigMsg[70];
-char * WL2KReportLine[70];
+char *PortConfig[70];
+char *RadioConfigMsg[70];
+char *WL2KReportLine[70];
 
 int nextRadioPort = 0;
 int nextDummyInterlock = 233; 
@@ -179,15 +179,16 @@ double LonFromLOC;
 
 
 
-VOID * zalloc(int len);
+VOID *zalloc(int len);
 
-int WritetoConsoleLocal(char * buff);
-char * stristr (char *ch1, char *ch2);
-int FromLOC(char * Locator, double * pLat, double * pLon);
+int WritetoConsoleLocal(char *buff);
+char *stristr(char *ch1, char *ch2);
+int FromLOC(char *Locator, double *pLat, double *pLon);
 
-VOID Consoleprintf(const char * format, ...)
-{
+
+VOID Consoleprintf(const char *format, ...) {
 	char Mess[512];
+
 	va_list(arglist);
 
 	va_start(arglist, format);
@@ -203,15 +204,15 @@ VOID Consoleprintf(const char * format, ...)
 
 #pragma pack()
 
-int tnctypes(int i, char value[],char rec[]);
-int do_kiss (char value[],char rec[]);
+int tnctypes(int i, char value[], char rec[]);
+int do_kiss(char value[], char rec[]);
 
-struct TNCDATA * TNCCONFIGTABLE = NULL;		// malloc'ed
+struct TNCDATA *TNCCONFIGTABLE = NULL;		// malloc'ed
 int NUMBEROFTNCPORTS = 0;
 
-struct UPNP * UPNPConfig = NULL;
+struct UPNP *UPNPConfig = NULL;
 
-struct TNCDATA * TNC2ENTRY;
+struct TNCDATA *TNC2ENTRY;
 
 extern char PWTEXT[];
 extern char HFCTEXT[];

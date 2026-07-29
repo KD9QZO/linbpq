@@ -768,13 +768,13 @@ typedef struct TNCINFO
 	int InPacket;					// FLDigi - SOH or < received.
 	int MCASTLen;					// Data still to get
 
-	int DataMode;					// How to treat data 
+	int DataMode;					// How to treat data
 
-#define RXDATA  0x30				// Switch to Receive Data characters
+#define RXDATA	0x30				// Switch to Receive Data characters
 #define TXDATA  0x31				// Switch to Transmit Data characters
 #define SECDATA 0x32				// Switch to RX data from secondary port
 
-	int TXMode;					// Where to send data 
+	int TXMode;						// Where to send data
 
 #define TXMODEM 0x33				// Send TX data to modem
 #define TXSEC   0x34				// Send TX data to secondary port
@@ -785,7 +785,7 @@ typedef struct TNCINFO
 	int ModemCentre;				// Modem centre frequency
 	int ClientHeight;
 	int ClientWidth;
-	HWND xIDC_TNCSTATE; 
+	HWND xIDC_TNCSTATE;
 	HWND xIDC_COMMSSTATE;
 	HWND xIDC_MODE;
 	HWND xIDC_LEDS;
@@ -802,27 +802,26 @@ typedef struct TNCINFO
 	HWND xIDC_TXTUNE;
 	HWND xIDC_TXTUNEVAL;
 
-	char * WEB_TNCSTATE; 
-	char * WEB_COMMSSTATE;
-	char * WEB_MODE;
-	char * WEB_LEDS;
-	char * WEB_TRAFFIC;
-	char * WEB_BUFFERS;
-	char * WEB_CHANSTATE;
-	char * WEB_STATE;
-	char * WEB_TXRX;
-	char * WEB_PROTOSTATE;
-	char * WEB_RESTARTTIME;
-	char * WEB_RESTARTS;
-	char * WEB_PACTORLEVEL;
-	char * WEB_LEVELS;
+	char *WEB_TNCSTATE;
+	char *WEB_COMMSSTATE;
+	char *WEB_MODE;
+	char *WEB_LEDS;
+	char *WEB_TRAFFIC;
+	char *WEB_BUFFERS;
+	char *WEB_CHANSTATE;
+	char *WEB_STATE;
+	char *WEB_TXRX;
+	char *WEB_PROTOSTATE;
+	char *WEB_RESTARTTIME;
+	char *WEB_RESTARTS;
+	char *WEB_PACTORLEVEL;
+	char *WEB_LEVELS;
 	char WEB_CHANGED;				// Used to speed up refresh when active
 	char WebSockUsed;				// If not set don't build page
 	char PageChanged;				// Set when page could have changed
 
-	char * WebPage;					// Device Web Page. Used for Websocks refresh
+	char *WebPage;					// Device Web Page. Used for Websocks refresh
 	int WebPageLen;
-
 
 	HMENU hMenu;
 	HMENU hWndMenu;
@@ -882,10 +881,11 @@ typedef struct TNCINFO
 
 } *PTNCINFO;
 
-VOID * zalloc(int len);
 
-BOOL ReadConfigFile(int Port, int ProcLine(char * buf, int Port));
-int GetLine(char * buf);
+VOID *zalloc(int len);
+
+BOOL ReadConfigFile(int Port, int ProcLine(char *buf, int Port));
+int GetLine(char *buf);
 BOOL CreatePactorWindow(struct TNCINFO * TNC, char * ClassName, char * WindowTitle, int RigControlRow, WNDPROC WndProc,
 						int Width, int Height, VOID ForcedCloseProc(struct TNCINFO * TNC, int Stream));
 char * CheckAppl(struct TNCINFO * TNC, char * Appl);
@@ -926,37 +926,34 @@ extern BOOL MinimizetoTray;
 int standardParams(struct TNCINFO * TNC, char * buf);
 void DecodePTTString(struct TNCINFO * TNC, char * ptr);
 
-int Rig_Command(TRANSPORTENTRY * Session, char * Command);
+int Rig_Command(TRANSPORTENTRY *Session, char *Command);
 
 BOOL Rig_Poll();
 
-VOID Rig_PTT(struct TNCINFO * TNC, BOOL PTTState);
-VOID Rig_PTTEx(struct RIGINFO * RIG, BOOL PTTState, struct TNCINFO * TNC);
+VOID Rig_PTT(struct TNCINFO *TNC, BOOL PTTState);
+VOID Rig_PTTEx(struct RIGINFO *RIG, BOOL PTTState, struct TNCINFO *TNC);
 
-struct RIGINFO * Rig_GETPTTREC(int Port);
-	
-struct ScanEntry ** CheckTimeBands(struct RIGINFO * RIG);
+struct RIGINFO *Rig_GETPTTREC(int Port);
+
+struct ScanEntry **CheckTimeBands(struct RIGINFO *RIG);
 
 #ifndef LINBPQ
 LRESULT CALLBACK PacWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 #endif
 
-#define Report_P1 11
-#define Report_P12 12 
-#define Report_P123 13
-#define Report_P2 14
-#define Report_P23 15
-#define Report_P3 16
-
-#define Report_P1234 17
-#define Report_P234 18
-#define Report_P34 19
-#define Report_P4 20
-
-#define Report_WINMOR500 21
-#define Report_WINMOR1600 22 
-
-#define Report_Robust 30 
+#define Report_P1			11
+#define Report_P12			12
+#define Report_P123			13
+#define Report_P2			14
+#define Report_P23			15
+#define Report_P3			16
+#define Report_P1234		17
+#define Report_P234			18
+#define Report_P34			19
+#define Report_P4			20
+#define Report_WINMOR500	21
+#define Report_WINMOR1600	22
+#define Report_Robust		30
 
 #define IOCTL_SERIAL_IS_COM_OPEN CTL_CODE(FILE_DEVICE_SERIAL_PORT,0x800,METHOD_BUFFERED,FILE_ANY_ACCESS)
 #define IOCTL_SERIAL_GETDATA     CTL_CODE(FILE_DEVICE_SERIAL_PORT,0x801,METHOD_BUFFERED,FILE_ANY_ACCESS)

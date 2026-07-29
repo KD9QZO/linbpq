@@ -149,7 +149,7 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #endif
 #include "bpq32.h"
 
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 #include "kernelresource.h"
 #include <process.h>
 #endif
@@ -197,58 +197,101 @@ void OpenSockets(VOID * Param);
 void CloseSockets(struct AXIPPORTINFO * PORT);
 
 
-static int CONVFROMAX25(char * incall, char * outcall);
-void CreateMHWindow(struct AXIPPORTINFO * PORT);
-int Update_MH_List(struct AXIPPORTINFO * PORT, UCHAR * ipad, char * call, char proto, short port, BOOL IPv6);
-int Update_MH_KeepAlive(struct AXIPPORTINFO * PORT, struct in_addr ipad, char proto, short port);
+static int CONVFROMAX25(char *incall, char *outcall);
+
+void CreateMHWindow(struct AXIPPORTINFO *PORT);
+
+int Update_MH_List(struct AXIPPORTINFO *PORT, UCHAR *ipad, char *call, char proto, short port, BOOL IPv6);
+
+int Update_MH_KeepAlive(struct AXIPPORTINFO *PORT, struct in_addr ipad, char proto, short port);
+
 unsigned short int compute_crc(unsigned char *buf,int l);
-unsigned int find_arp(unsigned char * call);
-BOOL add_arp_entry(struct AXIPPORTINFO * PORT, unsigned char * call, UCHAR * ip, int len, int port,unsigned char * name,
-		int keepalive, BOOL BCFlag, BOOL AutoAdded, int TCPMode, int SourcePort, BOOL IPv6, int noUpdate, int useSourcePort);
-BOOL add_bc_entry(struct AXIPPORTINFO * PORT, unsigned char * call, int len);
-BOOL convtoax25(unsigned char * callsign, unsigned char * ax25call, int * calllen);
+
+unsigned int find_arp(unsigned char *call);
+
+BOOL add_arp_entry(
+		struct AXIPPORTINFO *PORT,
+		unsigned char *call,
+		UCHAR *ip,
+		int len,
+		int port,
+		unsigned char *name,
+		int keepalive,
+		BOOL BCFlag,
+		BOOL AutoAdded,
+		int TCPMode,
+		int SourcePort,
+		BOOL IPv6,
+		int noUpdate,
+		int useSourcePort
+);
+
+BOOL add_bc_entry(struct AXIPPORTINFO *PORT, unsigned char *call, int len);
+
+BOOL convtoax25(unsigned char *callsign, unsigned char *ax25call, int *calllen);
+
 static BOOL ReadConfigFile(int Port);
-static int ProcessLine(char * buf, struct AXIPPORTINFO * PORT);
-int CheckKeepalives(struct AXIPPORTINFO * PORT);
-BOOL CopyScreentoBuffer(char * buff, struct AXIPPORTINFO * PORT);
-int DumpFrameInHex(unsigned char * msg, int len);
-VOID SendFrame(struct AXIPPORTINFO * PORT, struct arp_table_entry * arp_table, UCHAR * buff, int txlen);
-BOOL CheckSourceisResolvable(struct AXIPPORTINFO * PORT, char * call, int FromPort, VOID * rxaddr, int ToPort);
-int DataSocket_Read(struct arp_table_entry * sockptr, SOCKET sock);
-int GetMessageFromBuffer(struct AXIPPORTINFO * PORT, char * Buffer);
-int	KissEncode(UCHAR * inbuff, UCHAR * outbuff, int len);
-int	KissDecode(UCHAR * inbuff, int len);
+
+static int ProcessLine(char *buf, struct AXIPPORTINFO *PORT);
+
+int CheckKeepalives(struct AXIPPORTINFO *PORT);
+
+BOOL CopyScreentoBuffer(char *buff, struct AXIPPORTINFO *PORT);
+
+int DumpFrameInHex(unsigned char *msg, int len);
+
+VOID SendFrame(struct AXIPPORTINFO *PORT, struct arp_table_entry *arp_table, UCHAR *buff, int txlen);
+
+BOOL CheckSourceisResolvable(struct AXIPPORTINFO *PORT, char *call, int FromPort, VOID *rxaddr, int ToPort);
+
+int DataSocket_Read(struct arp_table_entry *sockptr, SOCKET sock);
+
+int GetMessageFromBuffer(struct AXIPPORTINFO *PORT, char *Buffer);
+
+int	KissEncode(UCHAR *inbuff, UCHAR *outbuff, int len);
+
+int	KissDecode(UCHAR *inbuff, int len);
+
 int Socket_Accept(int SocketId);
+
 int Socket_Connect(int SocketId, int Error);
+
 int Socket_Data(int sock, int error, int eventcode);
-VOID TCPConnectThread(VOID * Param);
-VOID __cdecl Debugprintf(const char * format, ...);
-VOID __cdecl Consoleprintf(const char * format, ...);
-BOOL OpenListeningSocket(struct AXIPPORTINFO * PORT, struct arp_table_entry * arp);
-VOID Format_Addr(unsigned char * Addr, char * Output, BOOL IPV6);
-static void CreateResolverWindow(struct AXIPPORTINFO * PORT);
-VOID SaveMDIWindowPos(HWND hWnd, char * RegKey, char * Value, BOOL Minimized);
-VOID SaveAXIPCache(struct AXIPPORTINFO * PORT);
-VOID GetAXIPCache(struct AXIPPORTINFO * PORT);
+
+VOID TCPConnectThread(VOID *Param);
+
+VOID __cdecl Debugprintf(const char *format, ...);
+
+VOID __cdecl Consoleprintf(const char *format, ...);
+
+BOOL OpenListeningSocket(struct AXIPPORTINFO *PORT, struct arp_table_entry *arp);
+
+VOID Format_Addr(unsigned char *Addr, char *Output, BOOL IPV6);
+
+static void CreateResolverWindow(struct AXIPPORTINFO *PORT);
+
+VOID SaveMDIWindowPos(HWND hWnd, char *RegKey, char *Value, BOOL Minimized);
+
+VOID SaveAXIPCache(struct AXIPPORTINFO *PORT);
+
+VOID GetAXIPCache(struct AXIPPORTINFO *PORT);
 
 
-union
-{
+union {
 	struct sockaddr_in sinx; 
 	struct sockaddr_in6 sinx6; 
 } sinx;
-/*
-union
-{
+
+#if 0
+union {
 	struct sockaddr_in destaddr;
 	struct sockaddr_in6 destaddr6;
 } destaddr;
-*/
+#endif
 
 #define IP_AXIP 93				   // IP Protocol for AXIP
 
 #pragma pack(1) 
-
 struct iphdr {
 //	unsigned int version:4;        // Version of IP
 //	unsigned int h_len:4;          // length of the header
@@ -260,35 +303,35 @@ struct iphdr {
 	unsigned char  ttl; 
 	unsigned char proto;           // protocol (TCP, UDP etc)
 	unsigned short checksum;       // IP checksum
-
 	unsigned int sourceIP;
 	unsigned int destIP;
-
 };
-
 #pragma pack()
 
 
-#define TCPMaster 1
-#define TCPSlave 2
+#define TCPMaster		1
+#define TCPSlave		2
 
-#define TCPListening 1
-#define TCPConnecting 2
-#define TCPConnected 4
+#define TCPListening	1
+#define TCPConnecting	2
+#define TCPConnected	4
 
-#ifndef LINBPQ
 
-LOGFONT LFTTYFONT ;
+#if !defined(LINBPQ)
 
-extern HFONT hFont ;
+LOGFONT LFTTYFONT;
+
+extern HFONT hFont;
 
 RECT ResRect;
 RECT MHRect;
 
 extern HKEY REGTREE;
-
-extern HWND ClientWnd, FrameWnd;
-extern HMENU hMainFrameMenu, hBaseMenu, hWndMenu;
+extern HWND ClientWnd;
+extern HWND FrameWnd;
+extern HMENU hMainFrameMenu;
+extern HMENU hBaseMenu;
+extern HMENU hWndMenu;
 extern HBRUSH bgBrush;
 
 #endif
@@ -307,24 +350,24 @@ char CantReplyList[512] = "";		// To suppress duplicate "Can't Reply" messages
 
 DWORD n;
 
-struct AXIPPORTINFO * Portlist[MaxBPQPortNo + 1];
+struct AXIPPORTINFO *Portlist[MaxBPQPortNo + 1];
 
 int InitAXIP(int Port);
 
 int CurrentResEntries;
 
-static char ConfigClassName[]="CONFIG";
+static char ConfigClassName[] = "CONFIG";
 
 HANDLE hInstance;
 
-VOID SaveAXIPWindowPos(int port)
-{
-#ifndef LINBPQ
-	struct AXIPPORTINFO * PORT;
+
+
+VOID SaveAXIPWindowPos(int port) {
+#if !defined(LINBPQ)
+	struct AXIPPORTINFO *PORT;
 	char Key[80];
 
 	PORT = Portlist[port];
-		
 	if (PORT == NULL)
 		return;
 
@@ -337,56 +380,49 @@ VOID SaveAXIPWindowPos(int port)
 }
 
 
-static size_t ExtProc(int fn, int port, PMESSAGE buff)
-{
-	struct iphdr * iphdrptr;
-	int len,txlen=0,err,index,digiptr,i;
+static size_t ExtProc(int fn, int port, PMESSAGE buff) {
+	struct iphdr *iphdrptr;
+	int len;
+	int txlen = 0;
+	int err;
+	int index;
+	int digiptr;
+	int i;
 	unsigned short int crc;
 	char rxbuff[5000];
 	char axcall[7];
 	char errmsg[100];
-	union
-	{
+	union {
 		struct sockaddr_in rxaddr;
 		struct sockaddr_in6 rxaddr6;
 	} RXaddr;
-	struct AXIPPORTINFO * PORT = Portlist[port];
+	struct AXIPPORTINFO *PORT = Portlist[port];
 
-	switch (fn)
-	{
+	switch (fn) {
 	case 1:				// poll
-
 		//
 		//	Check Keepalive timers
 		//
 		time(&PORT->ltime);
 
-		if (PORT->ltime-PORT->lasttime >9 )
-		{
+		if (PORT->ltime-PORT->lasttime > 9) {
 			PORT->lasttime=PORT->ltime;
 			CheckKeepalives(PORT);
 		}
 
-		if (PORT->needip)
-		{
+		if (PORT->needip) {
 			char call[7];
 
 			len = recvfrom(PORT->sock,rxbuff,500,0,(struct sockaddr *)&RXaddr.rxaddr,&addrlen);
-
-			if (len == -1)
-			{		
+			if (len == -1) {
 				err = WSAGetLastError();
-			}
-			else
-			{
-				iphdrptr=(struct iphdr *)&rxbuff;
+			} else {
+				iphdrptr = (struct iphdr*)&rxbuff;
 
-				if (len == ntohs(iphdrptr->total_len))
-				{
+				if (len == ntohs(iphdrptr->total_len)) {
 					len-=20;			// IP HEADER
 
-					if (memcmp(&rxbuff[20], "Keepalive", 9) == 0 )
-					{
+					if (memcmp(&rxbuff[20], "Keepalive", 9) == 0) {
 						if (PORT->MHEnabled)
 							Update_MH_KeepAlive(PORT, RXaddr.rxaddr.sin_addr,'I',93);
 	
@@ -472,8 +508,7 @@ static size_t ExtProc(int fn, int port, PMESSAGE buff)
 			}
 		}
 
-		for (i=0;i<PORT->NumberofUDPPorts;i++)
-		{
+		for (i = 0; i < PORT->NumberofUDPPorts; i++) {
 			char call[7];
 
 			if (PORT->IPv6[i])
@@ -481,20 +516,16 @@ static size_t ExtProc(int fn, int port, PMESSAGE buff)
 			else
 				len = recvfrom(PORT->udpsock[i],rxbuff,500,0,(struct sockaddr *)&RXaddr.rxaddr, &addrlen);
 	
-			if (len == -1)
-			{		
+			if (len == -1) {
 				err = WSAGetLastError();
-			}
-			else
-			{
-				if (memcmp(rxbuff, "Keepalive", 9) == 0 )
-				{
+			} else {
+				if (memcmp(rxbuff, "Keepalive", 9) == 0) {
 					if (PORT->MHEnabled)
 						Update_MH_KeepAlive(PORT, RXaddr.rxaddr.sin_addr, 'U', PORT->udpport[i]);
-	
+
 					continue;
 				}
-				
+
 				crc = compute_crc(&rxbuff[0], len);
 
 				if (crc == 0xf0b8)		// Good CRC
@@ -583,17 +614,14 @@ static size_t ExtProc(int fn, int port, PMESSAGE buff)
 			}
 		}
 
-		if (PORT->NeedTCP)
-		{
+		if (PORT->NeedTCP) {
 			len = GetMessageFromBuffer(PORT, rxbuff);
 
-			if (len)
-			{
+			if (len) {
 				len = KissDecode(rxbuff, len-1);		// Len includes FEND
 				len -= 2;	// Ignore Checksum
 
-				if (len < MAXDATA)
-				{
+				if (len < MAXDATA) {
 					memcpy(&buff->DEST, &rxbuff[0], len);
 					len += (3 + sizeof(void *));
 
@@ -697,7 +725,7 @@ static size_t ExtProc(int fn, int port, PMESSAGE buff)
 		GetAXIPCache(PORT);
 
 		ResolveDelay = 2;
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 		InvalidateRect(PORT->hResWnd,NULL,TRUE);
 #endif
 		break;
@@ -705,7 +733,7 @@ static size_t ExtProc(int fn, int port, PMESSAGE buff)
 	case 5:				// Terminate
 
 		CloseSockets(PORT);
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 		SendMessage(PORT->hMHWnd, WM_CLOSE, 0, 0);
 		SendMessage(PORT->hResWnd, WM_CLOSE, 0, 0);
 #endif
@@ -1072,7 +1100,7 @@ void CloseSockets(struct AXIPPORTINFO * PORT)
 	return ;
 }	
 
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 
 static LRESULT CALLBACK AXResWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -1432,7 +1460,7 @@ LRESULT FAR PASCAL ConfigWndProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lPa
 
 static void CreateResolverWindow(struct AXIPPORTINFO * PORT)
 {
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 
     int WindowParam;
 	WNDCLASS  wc;
@@ -1616,7 +1644,7 @@ static void ResolveNames(VOID * Param)
 
 		SaveAXIPCache(PORT);
 
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 		InvalidateRect(PORT->hResWnd,NULL,TRUE);
 #endif
 		while(ResolveDelay-- > 0)
@@ -1632,7 +1660,7 @@ static void ResolveNames(VOID * Param)
 	Debugprintf("AXIP Resolve thread exitied");
 }
 
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 
 LRESULT CALLBACK MHWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -1878,7 +1906,7 @@ BOOL CopyScreentoBuffer(char * buff, struct AXIPPORTINFO * PORT)
 
 void CreateMHWindow(struct AXIPPORTINFO * PORT)
 {
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 	
 	WNDCLASS  wc;
 	char WindowTitle[100];
@@ -2514,7 +2542,7 @@ BOOL add_arp_entry(struct AXIPPORTINFO * PORT, UCHAR * call, UCHAR * ip, int len
 			arp->destaddr.sin_family = AF_INET;
 		}
 		arp->destaddr.sin_port = htons(arp->port);
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 			
 		SetScrollRange(PORT->hResWnd,SB_VERT, 0, PORT->arp_table_len, TRUE);
 		InvalidateRect(PORT->hResWnd, NULL, TRUE);
@@ -2698,7 +2726,7 @@ MoveEntries:
 	time(&MH->LastHeard);
 	MH->Keepalive = SaveKeepalive;
 	MH->IPv6 = IPv6;
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 	InvalidateRect(PORT->hMHWnd,NULL,TRUE);
 #endif
 	return 0;
@@ -3266,7 +3294,7 @@ VOID SaveAXIPCache(struct AXIPPORTINFO * PORT)
 	config_destroy(&cfg);
 }
 
-#ifndef LINBPQ
+#if !defined(LINBPQ)
 
 static BOOL GetStringValue(config_setting_t * group, char * name, char * value, int maxlen)
 {

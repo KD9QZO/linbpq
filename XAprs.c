@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
-*/	
+*/
 
 // Version 0.0.3.1 July 2016
 //	Switch to Thunderforest tile server
@@ -30,15 +30,15 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 //	Use my Tile Servers
 
 
-#ifndef _WIN32_WINNT		// Allow use of features specific to Windows XP or later.                   
+#ifndef _WIN32_WINNT		// Allow use of features specific to Windows XP or later.
 #define _WIN32_WINNT 0x0501	// Change this to the appropriate value to target other versions of Windows.
-#endif	
+#endif
 
 #define LINBPQ
 
 #include "compatbits.h"
 
-#include "BPQAPRS.h"
+#include "bpqaprs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,7 +50,7 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 
 #include <sys/socket.h>
 #include <sys/un.h>
-  
+
 #include <X11/Xlib.h>
 #include <X11/X.h>
 #define XK_MISCELLANY
@@ -140,8 +140,8 @@ int maxfd;
 
 struct SharedMem * SMEM;
 
-UCHAR * Shared;					// Start of Shared Mememy
-UCHAR * StnRecordBase;			// Start of Station Records
+UCHAR *Shared;					// Start of Shared Mememy
+UCHAR *StnRecordBase;			// Start of Station Records
 
 int AutoFilterTimer = 0;
 
@@ -153,20 +153,20 @@ void SelectTXMsg (GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *
 int LoadImageFile (void * hwnd, char * pstrPathName,
                 png_byte **ppbImage, int *pxImgSize, int *pyImgSize,
                 int *piChannels, png_color *pBkgColor);
-BOOL PngLoadImage (char * pstrFileName, png_byte **ppbImageData,
+BOOL PngLoadImage(char *pstrFileName, png_byte **ppbImageData,
                    png_uint_32 *piWidth, png_uint_32 *piHeight, int *piChannels, png_color *pBkgColor);
 
-BOOL RGBToJpegFile(char * fileName, BYTE *dataBuf, UINT widthPix, UINT height, BOOL color, int quality);
+BOOL RGBToJpegFile(char *fileName, BYTE *dataBuf, UINT widthPix, UINT height, BOOL color, int quality);
 int XDestroyImage(XImage *ximage);
 
 int XLookupString(XKeyEvent *event_struct, char *buffer_return, int bytes_buffer, KeySym *keysym_return, void *status_in_out);
-	
+
 void RefreshTXList();
 
 static png_color bkgColor = {127, 127, 127};
 
-struct SEM
-{
+
+struct SEM {
 	UINT Flag;
 	int Clashes;
 	int	Gets;
@@ -174,10 +174,9 @@ struct SEM
 };
 
 
-struct SEM Semaphore = {0, 0, 0, 0};
+struct SEM Semaphore = { 0, 0, 0, 0 };
 
-void GetSemaphore(struct SEM * Semaphore)
-{
+void GetSemaphore(struct SEM *Semaphore) {
 	//
 	//	Wait for it to be free
 	//
@@ -208,8 +207,7 @@ loop1:
 	return;
 }
 
-void FreeSemaphore(struct SEM * Semaphore)
-{
+void FreeSemaphore(struct SEM *Semaphore) {
 	if (Semaphore->Flag == 0)
 		printf("Free Semaphore Called when Sem not held\n");
 
@@ -219,11 +217,9 @@ void FreeSemaphore(struct SEM * Semaphore)
 	return;
 }
 
-char * strlop(char * buf, char delim)
-{
+char *strlop(char *buf, char delim) {
 	// Terminate buf at delim, and return rest of string
-
-	char * ptr = strchr(buf, delim);
+	char *ptr = strchr(buf, delim);
 
 	if (ptr == NULL) return NULL;
 
@@ -232,8 +228,7 @@ char * strlop(char * buf, char delim)
 	return ptr;
 }
 
-unsigned long _beginthread(void(*start_address)(), unsigned stack_size, VOID * arglist)
-{
+unsigned long _beginthread(void(*start_address)(), unsigned stack_size, VOID *arglist) {
 	pthread_t thread;
 
 	if (pthread_create(&thread, NULL, (void * (*)(void *))start_address, (void*) arglist) != 0)
@@ -244,13 +239,13 @@ unsigned long _beginthread(void(*start_address)(), unsigned stack_size, VOID * a
 	return thread;
 }
 
-int Sleep(int ms)
-{
+int Sleep(int ms) {
 	usleep(ms * 1000);
+
 	return 0;
 }
 
-struct OSMQUEUE OSMQueue = {NULL,0,0,0};
+struct OSMQUEUE OSMQueue = { NULL, 0, 0, 0 };
 
 int OSMQueueCount = 0;
 
@@ -272,7 +267,7 @@ BOOL LocalTime = TRUE;
 BOOL KM = FALSE;
 BOOL AddViewToFilter = FALSE;
 
-char ISFilter[1000] = "m/50 u/APBPQ*"; 
+char ISFilter[1000] = "m/50 u/APBPQ*";
 
 int SlowTimer = 0;
 
@@ -281,19 +276,21 @@ int JPEGInterval = 300;
 int JPEGCounter = 0;
 char JPEGFileName[MAX_PATH] = "BPQAPRS/HTML/APRSImage.jpg";
 
-char *month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+char *month[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
-Display * display;
-Window root, win;
+Display *display;
+Window root;
+Window win;
 GC gc;
-XImage * image, * popupimage;
+XImage *image;
+XImage *popupimage;
 
 int SetBaseX = 0;				// Lowest Tiles in currently loaded set
 int SetBaseY = 0;
 
 int TileX = 0;
-int TileY = 0;	
+int TileY = 0;
 
 int Zoom = 2;
 
@@ -305,7 +302,8 @@ int MapCentreY = 256;
 int MouseX, MouseY;
 int PopupX, PopupY;
 
-double MouseLat, MouseLon;
+double MouseLat;
+double MouseLon;
 
 BOOL NeedRefresh = FALSE;
 int NeedRedraw = 0;
@@ -353,7 +351,8 @@ UCHAR * PopupImage = NULL;
 BOOL ImageChanged = 0;
 
 int RetryCount = 7;
-int RetryIntervals[] = {0, 512, 256, 128, 64, 32, 16, 8};
+int RetryIntervals[] = { 0, 512, 256, 128, 64, 32, 16, 8 };
+
 
 // Station Name Font
 
@@ -457,31 +456,48 @@ const unsigned char ASCII[][5] = {
   ,{0x78, 0x46, 0x41, 0x46, 0x78} // 7f DEL
 };
 
-COLORREF Colours[256] = {0, RGB(0,0,255), RGB(0,128,0), RGB(0,128,192), 
-		RGB(0,192,0), RGB(0,192,255), RGB(0,255,0), RGB(128,0,128),
-		RGB(128,64,0), RGB(128,128,128), RGB(192,0,0), RGB(192,0,255),
-		RGB(192,64,128), RGB(192,128,255), RGB(255,0,0), RGB(255,0,255),				// 81
-		RGB(255,64,0), RGB(255,64,128), RGB(255,64,192), RGB(255,128,0)};
+
+COLORREF Colours[256] = {
+	0,
+	RGB(0,0,255),
+	RGB(0,128,0),
+	RGB(0,128,192),
+	RGB(0,192,0),
+	RGB(0,192,255),
+	RGB(0,255,0),
+	RGB(128,0,128),
+	RGB(128,64,0),
+	RGB(128,128,128),
+	RGB(192,0,0),
+	RGB(192,0,255),
+	RGB(192,64,128),
+	RGB(192,128,255),
+	RGB(255,0,0),
+	RGB(255,0,255),				// 81
+	RGB(255,64,0),
+	RGB(255,64,128),
+	RGB(255,64,192),
+	RGB(255,128,0)
+};
 
 
 
 
 struct my_error_mgr {
-  struct jpeg_error_mgr pub;	/* "public" fields */
-
-  jmp_buf setjmp_buffer;	/* for return to caller */
+	struct jpeg_error_mgr pub;	/* "public" fields */
+	jmp_buf setjmp_buffer;		/* for return to caller */
 };
 
-typedef struct my_error_mgr * my_error_ptr;
+typedef struct my_error_mgr *my_error_ptr;
 
-void my_error_exit (j_common_ptr cinfo)
-{
+
+void my_error_exit(j_common_ptr cinfo) {
 	/* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
-	my_error_ptr myerr = (my_error_ptr) cinfo->err;
+	my_error_ptr myerr = (my_error_ptr)cinfo->err;
 
 	char buffer[JMSG_LENGTH_MAX];
 	/* Create the message */
-	(*cinfo->err->format_message) (cinfo, buffer);
+	(*cinfo->err->format_message)(cinfo, buffer);
 
 	/* Always display the message. */
 	printf("JPEG Fatal Error");

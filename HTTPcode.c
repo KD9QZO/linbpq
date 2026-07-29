@@ -75,18 +75,19 @@ unsigned char * Compressit(unsigned char * In, int Len, int * OutLen);
 int doinflate(unsigned char * source, unsigned char * dest, int Len, int destlen, int * outLen);
 void SendDeviceWebPage(int Port);
 
-extern struct ROUTE * NEIGHBOURS;
-extern int  ROUTE_LEN;
-extern int  MAXNEIGHBOURS;
 
-extern struct DEST_LIST * DESTS;				// NODE LIST
-extern int  DEST_LIST_LEN;
-extern int  MAXDESTS;			// MAX NODES IN SYSTEM
+extern struct ROUTE *NEIGHBOURS;
+extern int ROUTE_LEN;
+extern int MAXNEIGHBOURS;
 
-extern struct _LINKTABLE * LINKS;
-extern int	LINK_TABLE_LEN; 
-extern int	MAXLINKS;
-extern char * RigWebPage;
+extern struct DEST_LIST *DESTS;				// NODE LIST
+extern int DEST_LIST_LEN;
+extern int MAXDESTS;						// MAX NODES IN SYSTEM
+
+extern struct _LINKTABLE *LINKS;
+extern int LINK_TABLE_LEN; 
+extern int MAXLINKS;
+extern char *RigWebPage;
 extern COLORREF Colours[256];
 
 extern BOOL IncludesMail;
@@ -101,12 +102,13 @@ extern BOOL APRSActive;
 
 extern UCHAR LogDirectory[];
 
-extern struct RIGPORTINFO * PORTInfo[34];
+extern struct RIGPORTINFO *PORTInfo[34];
 extern int NumberofPorts;
 
 extern UCHAR ConfigDirectory[260];
 
-extern struct AXIPPORTINFO * Portlist[];
+extern struct AXIPPORTINFO *Portlist[];
+
 
 VOID sendandcheck(SOCKET sock, const char * Buffer, int Len);
 int CompareNode(const void *a, const void *b);
@@ -124,7 +126,7 @@ int ProcessChatSignon(struct TCPINFO * TCP, char * MsgPtr, char * Appl, char * R
 VOID APRSProcessHTTPMessage(SOCKET sock, char * MsgPtr, BOOL LOCAL, BOOL COOKIE);
 
 
-static struct HTTPConnectionInfo * SessionList;	// active term mode sessions
+static struct HTTPConnectionInfo *SessionList;	// active term mode sessions
 
 char Mycall[10];
 
@@ -132,12 +134,12 @@ char MAILPipeFileName[] = "\\\\.\\pipe\\BPQMAILWebPipe";
 char CHATPipeFileName[] = "\\\\.\\pipe\\BPQCHATWebPipe";
 
 char Index[] = "<html><head><title>%s's BPQ32 Web Server</title></head><body><P align=center>"
-"<table border=2 cellpadding=2 cellspacing=2 bgcolor=white>"
-"<tr><td align=center><a href=/Node/NodeMenu.html>Node Pages</a></td>"
-"<td align=center><a href=/aprs>APRS Pages</a></td></tr></table></body></html>";
+		"<table border=2 cellpadding=2 cellspacing=2 bgcolor=white>"
+		"<tr><td align=center><a href=/Node/NodeMenu.html>Node Pages</a></td>"
+		"<td align=center><a href=/aprs>APRS Pages</a></td></tr></table></body></html>";
 
 char IndexNoAPRS[] = "<meta http-equiv=\"refresh\" content=\"0;url=/Node/NodeIndex.html\">"
-"<html><head></head><body></body></html>";
+		"<html><head></head><body></body></html>";
 
 //char APRSBit[] = "<td><a href=../aprs>APRS Pages</a></td>";
 
@@ -148,56 +150,53 @@ char IndexNoAPRS[] = "<meta http-equiv=\"refresh\" content=\"0;url=/Node/NodeInd
 char Tail[] = "</body></html>";
 
 char RouteHddr[] = "<h2 align=center>Routes</h2><table align=center border=2 style=font-family:monospace bgcolor=white>"
-"<tr><th>Port</th><th>Call</th><th>Quality</th><th>Node Count</th><th>Frame Count</th><th>Retries</th><th>Percent</th><th>Maxframe</th>"
-"<th>Frack</th><th>Last Heard</th><th>Queued</th><th>Rem Qual</th><th>SRTT</th><th>Rem SRTT</th></tr>";
+		"<tr><th>Port</th><th>Call</th><th>Quality</th><th>Node Count</th><th>Frame Count</th><th>Retries</th><th>Percent</th><th>Maxframe</th>"
+		"<th>Frack</th><th>Last Heard</th><th>Queued</th><th>Rem Qual</th><th>SRTT</th><th>Rem SRTT</th></tr>";
 
 char RouteLine[] = "<tr><td>%s%d</td><td>%s%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d%</td><td>%d</td><td>%d</td>"
-"<td>%02d:%02d<td>%d</td><td>%d</td></td><td></td><td></td></tr>";
+		"<td>%02d:%02d<td>%d</td><td>%d</td></td><td></td><td></td></tr>";
 
 char RouteLineINP3[] = "<tr><td>%s%d</td><td>%s%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d%</td><td>%d</td><td>%d</td>"
-"<td>%02d:%02d</td><td>%d</td><td>%d</td><td>%4.2fs</td><td>%4.2fs</td></tr>";
+		"<td>%02d:%02d</td><td>%d</td><td>%d</td><td>%4.2fs</td><td>%4.2fs</td></tr>";
 
 char xNodeHddr[] = "<align=center><form align=center method=get action=/Node/Nodes.html>"
-"<table align=center  bgcolor=white>"
-"<tr><td><input type=submit class='btn' name=a value=\"Nodes Sorted by Alias\"></td><td>"
-"<input type=submit class='btn' name=c value=\"Nodes Sorted by Call\"></td><td>"
-"<input type=submit class='btn' name=t value=\"Nodes with traffic\"></td></tr></form></table>"
-"<h2 align=center>Nodes %s</h2><table style=font-family:monospace align=center border=2 bgcolor=white><tr>";
+		"<table align=center  bgcolor=white>"
+		"<tr><td><input type=submit class='btn' name=a value=\"Nodes Sorted by Alias\"></td><td>"
+		"<input type=submit class='btn' name=c value=\"Nodes Sorted by Call\"></td><td>"
+		"<input type=submit class='btn' name=t value=\"Nodes with traffic\"></td></tr></form></table>"
+		"<h2 align=center>Nodes %s</h2><table style=font-family:monospace align=center border=2 bgcolor=white><tr>";
 
 char NodeHddr[] = "<center><form method=get action=/Node/Nodes.html>"
-"<input type=submit class='btn' name=a value=\"Nodes Sorted by Alias\">"
-"<input type=submit class='btn' name=c value=\"Nodes Sorted by Call\">"
-"<input type=submit class='btn' name=t value=\"Nodes with traffic\"></form></center>"
-"<h2 align=center>Nodes %s</h2><table style=font-family:monospace align=center border=2 bgcolor=white><tr>";
+		"<input type=submit class='btn' name=a value=\"Nodes Sorted by Alias\">"
+		"<input type=submit class='btn' name=c value=\"Nodes Sorted by Call\">"
+		"<input type=submit class='btn' name=t value=\"Nodes with traffic\"></form></center>"
+		"<h2 align=center>Nodes %s</h2><table style=font-family:monospace align=center border=2 bgcolor=white><tr>";
 
 char NodeLine[] = "<td><a href=NodeDetail?%s>%s:%s</td>";
 
-
 char StatsHddr[] = "<h2 align=center>Node Stats</h2><table align=center cellpadding=2 bgcolor=white>"
-"<col width=250 /><col width=80 /><col width=80 /><col width=80 /><col width=80 /><col width=80 />";
+		"<col width=250 /><col width=80 /><col width=80 /><col width=80 /><col width=80 /><col width=80 />";
 
 char PortStatsHddr[] = "<h2 align=center>Stats for Port %d</h2><table align=center border=2 cellpadding=2 bgcolor=white>";
 
 char PortStatsLine[] = "<tr><td> %s </td><td> %d </td></tr>";
 
-
 char Beacons[] = "<h2 align=center>Beacon Configuration for Port %d</h2><h3 align=center>You need to be signed in to save changes</h3><table align=center border=2 cellpadding=2 bgcolor=white>"
-"<form method=post action=BeaconAction>"
-"<table align=center  bgcolor=white>"
-"<tr><td>Send Interval (Minutes)</td><td><input type=text name=Every tabindex=1 size=5 value=%d></td></tr>" 
-"<tr><td>To</td><td><input name=Dest style=\"text-transform:uppercase;\" tabindex=2 size=5 value=%s></td></tr>"  
-"<tr><td>Path</td><td><input type=text name=Path style=\"text-transform:uppercase;\" size=50 maxlength=50 value=%s></td></tr>"
-"<tr><td>Send From File</td><td><input type=text name=File size=50 maxlength=50  value=%s></td></tr>"
-"<tr><td>Text</td><td><textarea name=\"Text\" cols=40 rows=5>%s</textarea></td></tr>"
-"</table>" 
-"<input type=hidden name=Port value=%d>"
-
-"<p align=center><input type=submit class='btn' value=Save><input type=submit class='btn' value=Test name=Test>"
-"</form>";
+		"<form method=post action=BeaconAction>"
+		"<table align=center  bgcolor=white>"
+		"<tr><td>Send Interval (Minutes)</td><td><input type=text name=Every tabindex=1 size=5 value=%d></td></tr>" 
+		"<tr><td>To</td><td><input name=Dest style=\"text-transform:uppercase;\" tabindex=2 size=5 value=%s></td></tr>"  
+		"<tr><td>Path</td><td><input type=text name=Path style=\"text-transform:uppercase;\" size=50 maxlength=50 value=%s></td></tr>"
+		"<tr><td>Send From File</td><td><input type=text name=File size=50 maxlength=50  value=%s></td></tr>"
+		"<tr><td>Text</td><td><textarea name=\"Text\" cols=40 rows=5>%s</textarea></td></tr>"
+		"</table>" 
+		"<input type=hidden name=Port value=%d>"
+		"<p align=center><input type=submit class='btn' value=Save><input type=submit class='btn' value=Test name=Test>"
+		"</form>";
 
 
 char LinkHddr[] = "<h2 align=center>Links</h2><table align=center border=2 bgcolor=white>"
-"<tr><th>Far Call</th><th>Our Call</th><th>Port</th><th>ax.25 state</th><th>Link Type</th><th>ax.25 Version</th></tr>";
+		"<tr><th>Far Call</th><th>Our Call</th><th>Port</th><th>ax.25 state</th><th>Link Type</th><th>ax.25 Version</th></tr>";
 
 char LinkLine[] = "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td align=center >%d</td></tr>";
 
@@ -206,14 +205,14 @@ char UserHddr[] = "<h2 align=center>Sessions</h2><table align=center border=2 ce
 char UserLine[] = "<tr><td>%s</td><td>%s</td><td>%s</td></tr>";
 
 char TermSignon[] = "<html><head><title>BPQ32 Node %s Terminal Access</title></head><body background=\"/background.jpg\">"
-"<h2 align=center>BPQ32 Node %s Terminal Access</h2>"
-"<h3 align=center>Please enter username and password to access the node</h3>"
-"<form method=post action=TermSignon>"
-"<table align=center  bgcolor=white>"
-"<tr><td>User</td><td><input type=text name=user tabindex=1 size=20 maxlength=50 /></td></tr>" 
-"<tr><td>Password</td><td><input type=password name=password tabindex=2 size=20 maxlength=50 /></td></tr></table>"  
-"<p align=center><input type=submit class='btn' value=Submit><input type=submit class='btn' value=Cancel name=Cancel>"
-"<input type=hidden name=Appl value=\"%s\"  id=Pass></form>";
+		"<h2 align=center>BPQ32 Node %s Terminal Access</h2>"
+		"<h3 align=center>Please enter username and password to access the node</h3>"
+		"<form method=post action=TermSignon>"
+		"<table align=center  bgcolor=white>"
+		"<tr><td>User</td><td><input type=text name=user tabindex=1 size=20 maxlength=50 /></td></tr>" 
+		"<tr><td>Password</td><td><input type=password name=password tabindex=2 size=20 maxlength=50 /></td></tr></table>"  
+		"<p align=center><input type=submit class='btn' value=Submit><input type=submit class='btn' value=Cancel name=Cancel>"
+		"<input type=hidden name=Appl value=\"%s\"  id=Pass></form>";
 
 
 char PassError[] = "<p align=center>Sorry, User or Password is invalid - please try again</p>";
@@ -224,105 +223,106 @@ char LostSession[] = "<html><body>Sorry, Session had been lost - refresh page to
 char NoSessions[] = "<html><body>Sorry, No Sessions available - refresh page to try again";
 
 char TermPage[] = "<!DOCTYPE html><html><meta http-equiv=Content-Type content='text/html; charset=UTF-8' />"
-"<head><title>BPQ32 Node %s</title></head>"
-"<script>function resize(){"
-"var w=window,d=document,e=d.documentElement,g=d.getElementsByTagName('body')[0];"
-"x=w.innerWidth;"
-"y=w.innerHeight;"
-"var txt=document.getElementById('txt');"
-"txt.style.height = y - 150 + 'px';}</script>"
-"<body onload='resize()' onresize='resize()'>"
-"<h3 align=center>BPQ32 Node %s</h3>"
-"<form method=post action=/Node/TermClose?%s>"
-"<p align=center><input type=submit class='btn' value='Close and return to Node Page' /></form>"
-"<iframe style='display:block;' id=txt frameborder=2 marginwidth=0  marginheight=0 src=OutputScreen.html?%s width=100%%></iframe>"
-"<iframe style='display:block;' frameborder=0 marginwidth=0 marginheight=3 src=InputLine.html?%s width=100%% height=45px></iframe>"
-"</body>";
+		"<head><title>BPQ32 Node %s</title></head>"
+		"<script>function resize(){"
+		"var w=window,d=document,e=d.documentElement,g=d.getElementsByTagName('body')[0];"
+		"x=w.innerWidth;"
+		"y=w.innerHeight;"
+		"var txt=document.getElementById('txt');"
+		"txt.style.height = y - 150 + 'px';}</script>"
+		"<body onload='resize()' onresize='resize()'>"
+		"<h3 align=center>BPQ32 Node %s</h3>"
+		"<form method=post action=/Node/TermClose?%s>"
+		"<p align=center><input type=submit class='btn' value='Close and return to Node Page' /></form>"
+		"<iframe style='display:block;' id=txt frameborder=2 marginwidth=0  marginheight=0 src=OutputScreen.html?%s width=100%%></iframe>"
+		"<iframe style='display:block;' frameborder=0 marginwidth=0 marginheight=3 src=InputLine.html?%s width=100%% height=45px></iframe>"
+		"</body>";
 
 char TermOutput[] = "<!DOCTYPE html><html><head>"
-"<meta http-equiv=cache-control content=no-cache>"
-"<meta http-equiv=pragma content=no-cache>"
-"<meta http-equiv=expires content=0>" 
-"<meta http-equiv=refresh content=2>"
-"<script type=\"text/javascript\">\r\n"
-"function ScrollOutput()\r\n"
-"{window.scrollBy(0,document.body.scrollHeight)}</script>"
-"</head><body id=Text>"
-"<div style=\"font-family:monospace;%s>\"";
+		"<meta http-equiv=cache-control content=no-cache>"
+		"<meta http-equiv=pragma content=no-cache>"
+		"<meta http-equiv=expires content=0>" 
+		"<meta http-equiv=refresh content=2>"
+		"<script type=\"text/javascript\">\r\n"
+		"function ScrollOutput()\r\n"
+		"{window.scrollBy(0,document.body.scrollHeight)}</script>"
+		"</head><body id=Text>"
+		"<div style=\"font-family:monospace;%s>\"";
 
 
 // font-family:monospace;background-color:black;color:lawngreen;font-size:12px
 
 char TermOutputTail[] = "</div><script type=\"text/javascript\">\r\nsetTimeout(ScrollOutput, 1)</script></body></html>";
 
-/*
+#if 0
 char InputLine[] = "<html><head></head><body onload='resize()' onresize='resize()'>"
-"<form name=inputform method=post action=/TermInput?%s>"
-"<script>document.inputform.input.focus();"
-"function resize(){"
-"var w=window,d=document,e=d.documentElement,g=d.getElementsByTagName('body')[0];"
-"x=w.innerWidth;y=w.innerHeight;"
-"var inp=document.getElementById('inp');"
-"inp.style.width =  x + 'px';}</script>"
-"<input id=inp type=text width=100%% name=input /></form>";
-*/
+		"<form name=inputform method=post action=/TermInput?%s>"
+		"<script>document.inputform.input.focus();"
+		"function resize(){"
+		"var w=window,d=document,e=d.documentElement,g=d.getElementsByTagName('body')[0];"
+		"x=w.innerWidth;y=w.innerHeight;"
+		"var inp=document.getElementById('inp');"
+		"inp.style.width =  x + 'px';}</script>"
+		"<input id=inp type=text width=100%% name=input /></form>";
+#endif
+
 char InputLine[] = "<!DOCTYPE html><html><head></head><body onload='resize()' onresize='resize()'>"
-"<form name=inputform method=post action=/TermInput?%s>"
-"<input style=\"font-family:monospace;%s>\" id=inp type=text text width=100%% name=input />"
-"<script>document.inputform.input.focus();"
-"function resize(){"
-"var w=window,d=document,e=d.documentElement,g=d.getElementsByTagName('body')[0];"
-"x=w.innerWidth;y=w.innerHeight;"
-"var inp=document.getElementById('inp');"
-"inp.style.width=x-20+'px';}</script></form>";
+		"<form name=inputform method=post action=/TermInput?%s>"
+		"<input style=\"font-family:monospace;%s>\" id=inp type=text text width=100%% name=input />"
+		"<script>document.inputform.input.focus();"
+		"function resize(){"
+		"var w=window,d=document,e=d.documentElement,g=d.getElementsByTagName('body')[0];"
+		"x=w.innerWidth;y=w.innerHeight;"
+		"var inp=document.getElementById('inp');"
+		"inp.style.width=x-20+'px';}</script></form>";
 
 static char NodeSignon[] = "<html><head><title>BPQ32 Node SYSOP Access</title></head><body background=\"/background.jpg\">"
-"<h3 align=center>BPQ32 Node %s SYSOP Access</h3>"
-"<h3 align=center>This page sets Cookies. Don't continue if you object to this</h3>"
-"<h3 align=center>Please enter Callsign and Password to access the Node</h3>"
-"<form method=post action=/Node/Signon?Node>"
-"<table align=center  bgcolor=white>"
-"<tr><td>User</td><td><input type=text name=user tabindex=1 size=20 maxlength=50 /></td></tr>" 
-"<tr><td>Password</td><td><input type=password name=password tabindex=2 size=20 maxlength=50 /></td></tr></table>"  
-"<p align=center><input type=submit class='btn' value=Submit /><input type=submit class='btn' value=Cancel name=Cancel /></form>";
-
+		"<h3 align=center>BPQ32 Node %s SYSOP Access</h3>"
+		"<h3 align=center>This page sets Cookies. Don't continue if you object to this</h3>"
+		"<h3 align=center>Please enter Callsign and Password to access the Node</h3>"
+		"<form method=post action=/Node/Signon?Node>"
+		"<table align=center  bgcolor=white>"
+		"<tr><td>User</td><td><input type=text name=user tabindex=1 size=20 maxlength=50 /></td></tr>" 
+		"<tr><td>Password</td><td><input type=password name=password tabindex=2 size=20 maxlength=50 /></td></tr></table>"  
+		"<p align=center><input type=submit class='btn' value=Submit /><input type=submit class='btn' value=Cancel name=Cancel /></form>";
 
 static char MailSignon[] = "<html><head><title>BPQ32 Mail Server Access</title></head><body background=\"/background.jpg\">"
-"<h3 align=center>BPQ32 Mail Server %s Access</h3>"
-"<h3 align=center>Please enter Callsign and Password to access the BBS</h3>"
-"<form method=post action=/Mail/Signon?Mail>"
-"<table align=center  bgcolor=white>"
-"<tr><td>User</td><td><input type=text name=user tabindex=1 size=20 maxlength=50 /></td></tr>" 
-"<tr><td>Password</td><td><input type=password name=password tabindex=2 size=20 maxlength=50 /></td></tr></table>"  
-"<p align=center><input type=submit class='btn' value=Submit /><input type=submit class='btn' value=Cancel name=Cancel /></form>";
+		"<h3 align=center>BPQ32 Mail Server %s Access</h3>"
+		"<h3 align=center>Please enter Callsign and Password to access the BBS</h3>"
+		"<form method=post action=/Mail/Signon?Mail>"
+		"<table align=center  bgcolor=white>"
+		"<tr><td>User</td><td><input type=text name=user tabindex=1 size=20 maxlength=50 /></td></tr>" 
+		"<tr><td>Password</td><td><input type=password name=password tabindex=2 size=20 maxlength=50 /></td></tr></table>"  
+		"<p align=center><input type=submit class='btn' value=Submit /><input type=submit class='btn' value=Cancel name=Cancel /></form>";
 
 static char ChatSignon[] = "<html><head><title>BPQ32 Chat Server Access</title></head><body background=\"/background.jpg\">"
-"<h3 align=center>BPQ32 Chat Server %s Access</h3>"
-"<h3 align=center>Please enter Callsign and Password to access the Chat Server</h3>"
-"<form method=post action=/Chat/Signon?Chat>"
-"<table align=center  bgcolor=white>"
-"<tr><td>User</td><td><input type=text name=user tabindex=1 size=20 maxlength=50 /></td></tr>" 
-"<tr><td>Password</td><td><input type=password name=password tabindex=2 size=20 maxlength=50 /></td></tr></table>"  
-"<p align=center><input type=submit class='btn' value=Submit /><input type=submit class='btn' value=Cancel name=Cancel /></form>";
+		"<h3 align=center>BPQ32 Chat Server %s Access</h3>"
+		"<h3 align=center>Please enter Callsign and Password to access the Chat Server</h3>"
+		"<form method=post action=/Chat/Signon?Chat>"
+		"<table align=center  bgcolor=white>"
+		"<tr><td>User</td><td><input type=text name=user tabindex=1 size=20 maxlength=50 /></td></tr>" 
+		"<tr><td>Password</td><td><input type=password name=password tabindex=2 size=20 maxlength=50 /></td></tr></table>"  
+		"<p align=center><input type=submit class='btn' value=Submit /><input type=submit class='btn' value=Cancel name=Cancel /></form>";
 
 
 static char MailLostSession[] = "<html><body>"
-"<form style=\"font-family: monospace; text-align: center;\" method=post action=/Mail/Lost?%s>"
-"Sorry, Session had been lost<br><br>&nbsp;&nbsp;&nbsp;&nbsp;"
-"<input name=Submit value=Restart type=submit class='btn'> <input type=submit class='btn' value=Exit name=Cancel><br></form>";
+		"<form style=\"font-family: monospace; text-align: center;\" method=post action=/Mail/Lost?%s>"
+		"Sorry, Session had been lost<br><br>&nbsp;&nbsp;&nbsp;&nbsp;"
+		"<input name=Submit value=Restart type=submit class='btn'> <input type=submit class='btn' value=Exit name=Cancel><br></form>";
 
 
 static char ConfigEditPage[] = "<html><head><meta content=\"text/html; charset=ISO-8859-1\" http-equiv=\"content-type\">"
-"<title>Edit Config</title></head><body background=/background.jpg>"
-"<form style=\"font-family: monospace;  text-align: center;\"method=post action=CFGSave?%s>"
-"<textarea cols=100 rows=25 name=Msg>%s</textarea><br><br>"
-"<input name=Save value=Save type=submit class='btn'><input name=Cancel value=Cancel type=submit class='btn'><br></form>";
+		"<title>Edit Config</title></head><body background=/background.jpg>"
+		"<form style=\"font-family: monospace;  text-align: center;\"method=post action=CFGSave?%s>"
+		"<textarea cols=100 rows=25 name=Msg>%s</textarea><br><br>"
+		"<input name=Save value=Save type=submit class='btn'><input name=Cancel value=Cancel type=submit class='btn'><br></form>";
 
 static char EXCEPTMSG[80] = "";
 
-void UndoTransparency(char * input)
-{
-	char * ptr1, * ptr2;
+
+void UndoTransparency(char *input) {
+	char *ptr1;
+	char *ptr2;
 	char c;
 	int hex;
 
@@ -332,53 +332,46 @@ void UndoTransparency(char * input)
 	ptr1 = ptr2 = input;
 
 	// Convert any %xx constructs
-
-	while (1)
-	{
+	while (1) {
 		c = *(ptr1++);
 
 		if (c == 0)
 			break;
 
-		if (c == '%')
-		{
+		if (c == '%') {
 			c = *(ptr1++);
-			if(isdigit(c))
+			if (isdigit(c))
 				hex = (c - '0') << 4;
 			else
 				hex = (tolower(c) - 'a' + 10) << 4;
 
 			c = *(ptr1++);
-			if(isdigit(c))
+			if (isdigit(c))
 				hex += (c - '0');
 			else
 				hex += (tolower(c) - 'a' + 10);
 
 			*(ptr2++) = hex;
-		}
-		else if (c == '+')
+		} else if (c == '+') {
 			*(ptr2++) = 32;
-		else
+		} else {
 			*(ptr2++) = c;
+		}
 	}
 	*ptr2 = 0;
 }
 
 
-
-
-VOID PollSession(struct HTTPConnectionInfo * Session)
-{
+VOID PollSession(struct HTTPConnectionInfo *Session) {
 	int state, change;
 	int count, len;
 	char Msg[400] = "";
 	char Formatted[8192];
-	char * ptr1, * ptr2;
+	char *ptr1, *ptr2;
 	char c;
 	int Line;
 
 	// Poll Node
-
 	SessionState(Session->Stream, &state, &change);
 
 	if (change == 1)
@@ -2857,15 +2850,10 @@ doHeader:
 				free (Compressed);
 
 			return 0;
-		}
-
-
-		else if (_memicmp(NodeURL, "/Icon", 5) == 0 && _memicmp(&NodeURL[10], ".png", 4) == 0)
-		{
+		} else if (_memicmp(NodeURL, "/Icon", 5) == 0 && _memicmp(&NodeURL[10], ".png", 4) == 0) {
 			// APRS internal Icon
+			char *Compressed;
 
-			char * Compressed;
-				
 			ReplyLen = GetAPRSIcon(_REPLYBUFFER, NodeURL);
 
 			if (allowDeflate)
@@ -2898,8 +2886,7 @@ doHeader:
 
 			ReplyLen = SetupNodeMenu(_REPLYBUFFER, LOCAL);
 
-			if (_stricmp(NodeURL, "/Node/webproc.css") == 0)
-			{
+			if (_stricmp(NodeURL, "/Node/webproc.css") == 0) {
 				char WebprocCSS[] =
 					".dropbtn {position: relative; border: 1px solid black;padding:1px;}\r\n"
 					".dropdown {position: relative; display: inline-block;}\r\n"

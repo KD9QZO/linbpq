@@ -809,51 +809,42 @@ static void abrthandler(int sig);
 
 void GetRestartData();
 
-void Semaphored100msCode()
-{
+void Semaphored100msCode() {
 	// code that doesn't need to run every tick - run every 100 mS
-
 	// Runs under semaphore
-
 	if (IPActive) Poll_IP();
 	if (RigActive) Rig_Poll();
 	if (APRSActive) Poll_APRS();
 	CheckWL2KReportTimer();
 
-	if (QCOUNT < 10)
-	{
+	if (QCOUNT < 10) {
 		if (CLOSING == FALSE)
 			FindLostBuffers();
 		CLOSING = TRUE;
 	}
 
-	if (CLOSING)
-	{
-		if (RunChat)
-		{
+	if (CLOSING) {
+		if (RunChat) {
 			CloseChat();
 			RunChat = FALSE;
 		}
 
-		if (RunMail)
-		{
+		if (RunMail) {
 			int BPQStream, n;
 
 			RunMail = FALSE;
 
-			for (n = 0; n < NumberofStreams; n++)
-			{
+			for (n = 0; n < NumberofStreams; n++) {
 				BPQStream = Connections[n].BPQStream;
 
-				if (BPQStream)
-				{
+				if (BPQStream) {
 					SetAppl(BPQStream, 0, 0);
 					Disconnect(BPQStream);
 					DeallocateStream(BPQStream);
 				}
 			}
 
-			//				SaveUserDatabase();
+//			SaveUserDatabase();
 			SaveMessageDatabase();
 			SaveBIDDatabase();
 			SaveConfig(ConfigName);
@@ -866,8 +857,7 @@ void Semaphored100msCode()
 	}
 
 
-	if (RigReconfigFlag)
-	{
+	if (RigReconfigFlag) {
 		RigReconfigFlag = FALSE;
 		Rig_Close();
 		Sleep(2000);				// Allow CATPTT threads to close
@@ -876,38 +866,32 @@ void Semaphored100msCode()
 		Consoleprintf("Rigcontrol Reconfiguration Complete");	
 	}
 
-	if (APRSReconfigFlag)
-	{
+	if (APRSReconfigFlag) {
 		APRSReconfigFlag = FALSE;
-		APRSClose();				
+		APRSClose();
 		APRSActive = Init_APRS();
 
 		Consoleprintf("APRS Reconfiguration Complete");	
 	}
 
-	if (ReconfigFlag)
-	{
+	if (ReconfigFlag) {
 		int i;
-		BPQVECSTRUC * HOSTVEC;
-		PEXTPORTDATA PORTVEC=(PEXTPORTDATA)PORTTABLE;
+		BPQVECSTRUC *HOSTVEC;
+		PEXTPORTDATA PORTVEC = (PEXTPORTDATA)PORTTABLE;
 
 		ReconfigFlag = FALSE;
 
-		//			SetupBPQDirectory();
+//		SetupBPQDirectory();
 
 		WritetoConsoleLocal("Reconfiguring ...\n\n");
 		OutputDebugString("BPQ32 Reconfiguring ...\n");
 
-
-		for (i=0;i<NUMBEROFPORTS;i++)
-		{
-			if (PORTVEC->PORTCONTROL.PORTTYPE == 0x10)			// External
-			{
-				if (PORTVEC->PORT_EXT_ADDR)
-				{
-					//						SaveWindowPos(PORTVEC->PORTCONTROL.PORTNUMBER);
-					//						SaveAXIPWindowPos(PORTVEC->PORTCONTROL.PORTNUMBER);
-					//						CloseDriverWindow(PORTVEC->PORTCONTROL.PORTNUMBER);
+		for (i = 0; i < NUMBEROFPORTS; i++) {
+			if (PORTVEC->PORTCONTROL.PORTTYPE == 0x10) {			// External
+				if (PORTVEC->PORT_EXT_ADDR) {
+//					SaveWindowPos(PORTVEC->PORTCONTROL.PORTNUMBER);
+//					SaveAXIPWindowPos(PORTVEC->PORTCONTROL.PORTNUMBER);
+//					CloseDriverWindow(PORTVEC->PORTCONTROL.PORTNUMBER);
 					PORTVEC->PORT_EXT_ADDR(5,PORTVEC->PORTCONTROL.PORTNUMBER, NULL);	// Close External Ports
 				}
 			}
@@ -925,7 +909,7 @@ void Semaphored100msCode()
 
 		WL2KReports = NULL;
 
-		//			Sleep(2000);
+//		Sleep(2000);
 
 		Consoleprintf("G8BPQ AX25 Packet Switch System Version %s %s", TextVerstring, Datestring);
 		Consoleprintf(VerCopyright);
@@ -1076,36 +1060,29 @@ void UnSemaphored100msCode()
 }
 
 
-int main(int argc, char * argv[])
-{
+int main(int argc, char *argv[]) {
 	int i;
-	struct UserInfo * user = NULL;
-	ConnectionInfo * conn;
+	struct UserInfo *user = NULL;
+	ConnectionInfo *conn;
 	struct stat STAT;
 	PEXTPORTDATA PORTVEC;
 
 #ifdef WIN32
-
-	WSADATA       WsaData;            // receives data from WSAStartup
+	WSADATA WsaData;            // receives data from WSAStartup
 	HWND hWnd = GetForegroundWindow();
 
 	WSAStartup(MAKEWORD(2, 0), &WsaData);
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE);
 
 	// disable the [x] button.
-
-	if (hWnd != NULL)
-	{
+	if (hWnd != NULL) {
 		HMENU hMenu = GetSystemMenu(hWnd, 0);
-		if (hMenu != NULL)
-		{
+		if (hMenu != NULL) {
 			DeleteMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
 			DrawMenuBar(hWnd);
 		}
 	}
-
-#else
-
+#else	/* WIN32 */
 	signal(SIGSEGV, segvhandler);
 	signal(SIGABRT, abrthandler);
 
@@ -1118,26 +1095,25 @@ int main(int argc, char * argv[])
 #endif
 #endif
 
-// Disable Console Terminal if stdout redirected
-//	printf("STDOUT %d\n",isatty(STDOUT_FILENO));
-//	printf("STDIN %d\n",isatty(STDIN_FILENO));
+	// Disable Console Terminal if stdout redirected
+//	printf("STDOUT %d\n", isatty(STDOUT_FILENO));
+//	printf("STDIN %d\n", isatty(STDIN_FILENO));
 
 	if (!isatty(STDOUT_FILENO) || !isatty(STDIN_FILENO))
 		Redirected = 1;
+#endif	/* !WIN32 */
 
-#endif
+	printf("G8BPQ AX25 Packet Switch System Version %s %s\n", TextVerstring, Datestring);
+	printf("%s\n", VerCopyright);
 
-	 printf("G8BPQ AX25 Packet Switch System Version %s %s\n", TextVerstring, Datestring);
-	 printf("%s\n", VerCopyright);
+	printf("%d", sizeof(struct DEST_LIST));
 
-	 printf("%d", sizeof(struct DEST_LIST));
+	NOW = time(NULL);
+	srand(NOW);
 
-	 NOW = time(NULL);
-	 srand(NOW);
+	// look for optarg format parameters
 
-	 // look for optarg format parameters
-
-	 {
+	{
 		 int val;
 		 UCHAR * ptr1;
 		 UCHAR * ptr2;
@@ -1973,27 +1949,25 @@ int APIENTRY Reboot()
 
 }
 
-int APIENTRY Reconfig()
-{
-	if (!ProcessConfig())
-	{
+int APIENTRY Reconfig() {
+	if (!ProcessConfig()) {
 		return (0);
 	}
 	SaveNodes();
 	WritetoConsoleLocal("Nodes Saved\n");
-	ReconfigFlag=TRUE;
+	ReconfigFlag = TRUE;
 	WritetoConsoleLocal("Reconfig requested ... Waiting for Timer Poll\n");
+
 	return 1;
 }
 
-int APRSWriteLog(char * msg);
+int APRSWriteLog(char *msg);
 
-VOID MonitorAPRSIS(char * Msg, size_t MsgLen, BOOL TX)
-{
+VOID MonitorAPRSIS(char *Msg, size_t MsgLen, BOOL TX) {
 	char Line[300];
 	char Copy[300];
 	int Len;
-	struct tm * TM;
+	struct tm *TM;
 	time_t NOW;
 
 	if (LogAPRSIS == 0)
@@ -2003,7 +1977,6 @@ VOID MonitorAPRSIS(char * Msg, size_t MsgLen, BOOL TX)
 		return;
 
 	// Mustn't change Msg
-
 	memcpy(Copy, Msg, MsgLen);
 	Copy[MsgLen] = 0;
 
@@ -2013,12 +1986,11 @@ VOID MonitorAPRSIS(char * Msg, size_t MsgLen, BOOL TX)
 	Len = sprintf_s(Line, 299, "%02d:%02d:%02d%c %s", TM->tm_hour, TM->tm_min, TM->tm_sec, (TX)? 'T': 'R', Copy);
 
 	APRSWriteLog(Line);
-
 }
 
-struct TNCINFO * TNC;
+struct TNCINFO *TNC;
 
-#ifndef WIN32
+#if !defined(WIN32)
 
 #include <time.h>
 #include <sys/time.h>
@@ -2028,52 +2000,50 @@ struct TNCINFO * TNC;
 
 #include <mach/mach_time.h>
 
-#define CLOCK_REALTIME 0
-#define CLOCK_MONOTONIC 0
+#define CLOCK_REALTIME		0
+#define CLOCK_MONOTONIC		0
 
 
+int clock_gettime(int clk_id, struct timespec *t) {
+	mach_timebase_info_data_t timebase;
+	mach_timebase_info(&timebase);
+	uint64_t time;
 
-int clock_gettime(int clk_id, struct timespec *t){
-    mach_timebase_info_data_t timebase;
-    mach_timebase_info(&timebase);
-    uint64_t time;
-    time = mach_absolute_time();
-    double nseconds = ((double)time * (double)timebase.numer)/((double)timebase.denom);
-    double seconds = ((double)time * (double)timebase.numer)/((double)timebase.denom * 1e9);
-    t->tv_sec = seconds;
-    t->tv_nsec = nseconds;
-    return 0;
+	time = mach_absolute_time();
+
+	double nseconds = ((double)time * (double)timebase.numer) / ((double)timebase.denom);
+	double seconds = ((double)time * (double)timebase.numer) / ((double)timebase.denom * 1e9);
+
+	t->tv_sec = seconds;
+	t->tv_nsec = nseconds;
+
+	return 0;
 }
 #endif
 #endif
 
 
-uint64_t GetTickCount()
-{
+uint64_t GetTickCount() {
 	struct timespec ts;
+
 	clock_gettime(CLOCK_REALTIME, &ts);
+
 	return (ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
 }
 
-
-
-void SetWindowText(HWND hWnd, char * lpString)
-{
+void SetWindowText(HWND hWnd, char *lpString) {
 	return;
 };
 
-BOOL SetDlgItemText(HWND hWnd, int item, char * lpString)
-{
+BOOL SetDlgItemText(HWND hWnd, int item, char *lpString) {
 	return 0;
 };
 
 #endif
 
-int GetListeningPortsPID(int Port)
-{
+int GetListeningPortsPID(int Port) {
 #ifdef WIN32
-
-	MIB_TCPTABLE_OWNER_PID * TcpTable = NULL;
+	MIB_TCPTABLE_OWNER_PID *TcpTable = NULL;
 	PMIB_TCPROW_OWNER_PID Row;
 	int dwSize = 0;
 	unsigned int n;
@@ -2081,18 +2051,15 @@ int GetListeningPortsPID(int Port)
 	// Get PID of process for this TCP Port
 
 	// Get Length of table
-	
 	GetExtendedTcpTable(TcpTable, &dwSize, TRUE, AF_INET, TCP_TABLE_OWNER_PID_LISTENER, 0);
 
 	TcpTable = malloc(dwSize);
 	GetExtendedTcpTable(TcpTable, &dwSize, TRUE, AF_INET, TCP_TABLE_OWNER_PID_LISTENER, 0);
 
-	for (n = 0; n < TcpTable->dwNumEntries; n++)
-	{
+	for (n = 0; n < TcpTable->dwNumEntries; n++) {
 		Row = &TcpTable->table[n];
-		
-		if (Row->dwLocalPort == Port && Row->dwState == MIB_TCP_STATE_LISTEN)
-		{
+
+		if (Row->dwLocalPort == Port && Row->dwState == MIB_TCP_STATE_LISTEN) {
 			return Row->dwOwningPid;
 			break;
 		}
@@ -2103,8 +2070,7 @@ int GetListeningPortsPID(int Port)
 
 
 
-VOID Check_Timer()
-{
+VOID Check_Timer() {
 }
 
 VOID POSTDATAAVAIL(){};
@@ -2142,37 +2108,31 @@ COLORREF Colours[256] = {0,
 };
 
 
-//VOID SendRPBeacon(struct TNCINFO * TNC)
-//{
+//VOID SendRPBeacon(struct TNCINFO *TNC) {
 //}
 
-int PollStreams()
-{
-	int state,change;
-	ConnectionInfo * conn;
+int PollStreams() {
+	int state;
+	int change;
+	ConnectionInfo *conn;
 	int n;
-	struct UserInfo * user = NULL;
+	struct UserInfo *user = NULL;
 	char ConnectedMsg[] = "*** CONNECTED    ";
 
-	for (n = 0; n < NumberofStreams; n++)
-	{
-  		conn = &Connections[n];
+	for (n = 0; n < NumberofStreams; n++) {
+		conn = &Connections[n];
 
 		DoReceivedData(conn->BPQStream);
 		DoBBSMonitorData(conn->BPQStream);
 
 		SessionState(conn->BPQStream, &state, &change);
 
-		if (change == 1)
-		{
-			if (state == 1) // Connected
-			{
+		if (change == 1) {
+			if (state == 1) {	// Connected
 				GetSemaphore(&ConSemaphore, 0);
 				Connected(conn->BPQStream);
 				FreeSemaphore(&ConSemaphore);
-			}
-			else
-			{
+			} else {
 				GetSemaphore(&ConSemaphore, 0);
 				Disconnected(conn->BPQStream);
 				FreeSemaphore(&ConSemaphore);
@@ -2184,29 +2144,20 @@ int PollStreams()
 }
 
 
-VOID CloseConsole(int Stream)
-{
+VOID CloseConsole(int Stream) {
 }
 
 #ifndef WIN32
-
-int V4ProcessReceivedData(struct TNCINFO * TNC)
-{
+int V4ProcessReceivedData(struct TNCINFO *TNC) {
 	return 0;
 }
 #endif
 
 #ifdef FREEBSD
-
-char * gcvt(double _Val, int _NumOfDigits, char * _DstBuf)
-{
+char *gcvt(double _Val, int _NumOfDigits, char *_DstBuf) {
 	sprintf(_DstBuf, "%f", _Val);
+
 	return _DstBuf;
 }
-
 #endif
-
-
-
-
 

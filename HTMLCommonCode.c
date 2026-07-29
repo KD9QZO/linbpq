@@ -32,12 +32,11 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include "templatedefs.c"				// Inline definitions from HTLMPages
 
 
-char * GetTemplateFromFile(int Version, char * FN)
-{
+char *GetTemplateFromFile(int Version, char *FN) {
 	int FileSize;
-	char * MsgBytes;
+	char *MsgBytes;
 	char MsgFile[265];
-	FILE * hFile;
+	FILE *hFile;
 	size_t ReadLen;
 	BOOL Special = FALSE;
 	struct stat STAT;
@@ -82,17 +81,13 @@ char * GetTemplateFromFile(int Version, char * FN)
 		return ChatStatustxt();
 
 	sprintf(MsgFile, "%s/HTML/%s", BPQDirectory, FN);
-
-	if (stat(MsgFile, &STAT) == -1)
-	{
+	if (stat(MsgFile, &STAT) == -1) {
 		MsgBytes = _strdup("File is missing");
 		return MsgBytes;
 	}
 
 	hFile = fopen(MsgFile, "rb");
-	
-	if (hFile == 0)
-	{
+	if (hFile == 0) {
 		MsgBytes = _strdup("File is missing");
 		return MsgBytes;
 	}
@@ -104,21 +99,19 @@ char * GetTemplateFromFile(int Version, char * FN)
 	fclose(hFile);
 
 	// Check Version
-
-	if (Version)
-	{
+	if (Version) {
 		int PageVersion = 0;
 
 		if (memcmp(MsgBytes, "<!-- Version", 12) == 0)
 			PageVersion = atoi(&MsgBytes[13]);
 
-		if (Version != PageVersion)
-		{
+		if (Version != PageVersion) {
 			free(MsgBytes);
 			MsgBytes = malloc(256);
 			sprintf(MsgBytes, "Wrong Version of HTML Page %s - is %d should be %d. Please update", FN, PageVersion, Version);
 		}
 	}
-	
+
 	return MsgBytes;
 }
+

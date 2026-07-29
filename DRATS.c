@@ -65,19 +65,17 @@ For a station status frame, the first byte of the message is an ASCII station st
 '9' - Offline
 */
 
-#define	T_DEF 0
-#define T_PNG_REQ 1
-#define T_PNG_RSP 2
-#define T_PNG_ERQ 3
-#define T_PNG_ERS 4
-#define T_STATUS 5
+#define	T_DEF		0
+#define T_PNG_REQ	1
+#define T_PNG_RSP	2
+#define T_PNG_ERQ	3
+#define T_PNG_ERS	4
+#define T_STATUS	5
+
 
 #pragma pack(1)
-
 // shorts are big-endian
-
-struct DRATSHeader
-{
+struct DRATSHeader {
 	unsigned char Magic;
 	unsigned short Seq;
 	unsigned char Sessno;
@@ -88,51 +86,46 @@ struct DRATSHeader
 	char CallTo[8];
 	unsigned char Message[2048];
 };
-
 #pragma pack()
 
-struct DRATSSession
-{
-	struct ConnectionInfo * sockptr;
+struct DRATSSession {
+	struct ConnectionInfo *sockptr;
 	unsigned int Seq;
 	unsigned int Sessno;
 	char CallFrom[8];
 	char CallTo[8];
 	int Stream;					// BPQ Stream
 	int StreamState;
-	struct DRATSQueue * Queue;
-	struct DRATSSession * Next; 
+	struct DRATSQueue *Queue;
+	struct DRATSSession *Next; 
 };
 
-struct DRATSQueue
-{
-	// Queue of messages to be sent to node from background (ie not under semaphore)
-
+struct DRATSQueue {	// Queue of messages to be sent to node from background (ie not under semaphore)
 	int Stream;
 	int Len;
-	unsigned char * Msg;
-	struct DRATSQueue * Next;
+	unsigned char *Msg;
+	struct DRATSQueue *Next;
 };
 
 
-struct DRATSSession * DRATSSessions = NULL; 
+struct DRATSSession *DRATSSessions = NULL; 
 
 
-char peer0_2[] = { /* Packet 17 */
-0x5b, 0x53, 0x4f, 0x42, 0x5d, 0xdd, 0x3d, 0x40, 
-0x3d, 0x40, 0x01, 0x05, 0x45, 0x78, 0x3d, 0x40, 
-0x18, 0x47, 0x38, 0x42, 0x50, 0x51, 0x7e, 0x7e, 
-0x7e, 0x43, 0x51, 0x43, 0x51, 0x43, 0x51, 0x7e, 
-0x7e, 0x78, 0xda, 0x33, 0xf4, 0xcf, 0xcb, 0xc9, 
-0xcc, 0x4b, 0x55, 0xd0, 0x70, 0xd1, 0x0d, 0x72, 
-0x0c, 0x09, 0xd6, 0x04, 0x3d, 0x40, 0x2a, 0x8c, 
-0x04, 0xb3, 0x5b, 0x45, 0x4f, 0x42, 0x5d };
+char peer0_2[] = {	/* Packet 17 */
+	0x5b, 0x53, 0x4f, 0x42, 0x5d, 0xdd, 0x3d, 0x40,
+	0x3d, 0x40, 0x01, 0x05, 0x45, 0x78, 0x3d, 0x40,
+	0x18, 0x47, 0x38, 0x42, 0x50, 0x51, 0x7e, 0x7e,
+	0x7e, 0x43, 0x51, 0x43, 0x51, 0x43, 0x51, 0x7e,
+	0x7e, 0x78, 0xda, 0x33, 0xf4, 0xcf, 0xcb, 0xc9,
+	0xcc, 0x4b, 0x55, 0xd0, 0x70, 0xd1, 0x0d, 0x72,
+	0x0c, 0x09, 0xd6, 0x04, 0x3d, 0x40, 0x2a, 0x8c,
+	0x04, 0xb3, 0x5b, 0x45, 0x4f, 0x42, 0x5d
+};
 
 
-void processDRATSFrame(unsigned char * Message, int Len, struct ConnectionInfo * sockptr);
+void processDRATSFrame(unsigned char *Message, int Len, struct ConnectionInfo *sockptr);
 
-int testDRATS()
-{
+int testDRATS() {
 //	processDRATSFrame(peer0_1, sizeof(peer0_1), 0);
 //	processDRATSFrame(peer0_2, sizeof(peer0_2), 0);
 //	processDRATSFrame(peer1_1, sizeof(peer1_1), 0);
@@ -149,15 +142,14 @@ extern char TextVerstring[50];
 
 int HeaderLen = offsetof(struct DRATSHeader, Message);
 
-int doinflate(unsigned char * source, unsigned char * dest, int Len, int destlen, int * outLen);
+int doinflate(unsigned char *source, unsigned char *dest, int Len, int destlen, int *outLen);
 int dratscrc(unsigned char *ptr, int count);
 int FindFreeStreamNoSem();
-void sendDRATSFrame(struct ConnectionInfo * sockptr, struct DRATSHeader * Header);
-int yEncode(unsigned char * in, unsigned char * out, int len, unsigned char * Banned);
+void sendDRATSFrame(struct ConnectionInfo *sockptr, struct DRATSHeader *Header);
+int yEncode(unsigned char *in, unsigned char *out, int len, unsigned char *Banned);
 
 
-int AllocateDRATSStream(struct DRATSSession * Sess)
-{
+int AllocateDRATSStream(struct DRATSSession *Sess) {
 	int Stream;
 
 	strcpy(pgm, "DRATS");
@@ -168,26 +160,22 @@ int AllocateDRATSStream(struct DRATSSession * Sess)
 
 	if (Stream == 255) return 0;
 
-	if (memcmp(Sess->CallTo, "NODE", 4) == 0)
-	{
+	if (memcmp(Sess->CallTo, "NODE", 4) == 0) {
 		//  Just connect to command level on switch
 	}
 
 	return Stream;
 }
 
-void ProcessDRATSPayload(struct DRATSHeader * Header, struct DRATSSession * Sess)
-{
-	struct DRATSQueue * QEntry;
-	BPQVECSTRUC * HOST;
+void ProcessDRATSPayload(struct DRATSHeader *Header, struct DRATSSession *Sess) {
+	struct DRATSQueue *QEntry;
+	BPQVECSTRUC *HOST;
 
-	if (Sess->Stream == 0)
-	{
+	if (Sess->Stream == 0) {
 		Sess->Stream = AllocateDRATSStream(Sess);
 	}
 
-	if (Sess->StreamState == 0)
-	{
+	if (Sess->StreamState == 0) {
 		unsigned char AXCall[10];
 
 		Connect(Sess->Stream);				// Connect

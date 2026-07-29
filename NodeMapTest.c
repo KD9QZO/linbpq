@@ -83,8 +83,7 @@ char * strlwr(char* s)
 
 #endif
 
-struct ChatNodeData
-{
+struct ChatNodeData {
 	char Call[10];
 	char NAlias[10];
 	double Lat;
@@ -98,51 +97,45 @@ struct ChatNodeData
 	time_t LastHeard;
 };
 
-struct ChatLink
-{
-	struct ChatNodeData * Call1;
-	struct ChatNodeData * Call2;
+struct ChatLink {
+	struct ChatNodeData *Call1;
+	struct ChatNodeData *Call2;
 	int Call1State;					// reported state from each end
 	int Call2State;
 	time_t LastHeard1;
 	time_t LastHeard2;
 };
 
-struct ModeItem
-{
+struct ModeItem {
 	int Mode;
 	int Interlock;
 	double Freq;
 	time_t LastHeard;
 };
 
-struct ModeEntries
-{
-	struct ModeItem * Mode[64];		// One per port
+struct ModeEntries {
+	struct ModeItem *Mode[64];		// One per port
 };
 
-struct FreqItem
-{
+struct FreqItem {
 	int Interlock;
-	char * Freqs;					// Store as text as that is what the web page will want
+	char *Freqs;					// Store as text as that is what the web page will want
 	time_t LastHeard;
 };
 
-struct FreqEntries
-{
-	struct FreqItem * Freq[64];		// One per interlock group
+struct FreqEntries {
+	struct FreqItem *Freq[64];		// One per interlock group
 };
 
-struct ChatNodeData ** ChatNodes = NULL;
+struct ChatNodeData **ChatNodes = NULL;
 
 int NumberOfChatNodes = 0;
 
-struct ChatLink ** ChatLinks = NULL;
+struct ChatLink **ChatLinks = NULL;
 
 int NumberOfChatLinks = 0;
 
-struct NodeData
-{
+struct NodeData {
 	char Call[10];
 	double Lat;
 	double Lon;
@@ -150,32 +143,30 @@ struct NodeData
 	char Comment[512];
 	time_t LastHeard;
 	int onlyHeard;			// Station heard but not reporting
-	struct HeardItem * HeardBy;
-	struct HeardItem * Heard;
-	struct ModeEntries * Modes;
-	struct FreqEntries * Freqs;
+	struct HeardItem *HeardBy;
+	struct HeardItem *Heard;
+	struct ModeEntries *Modes;
+	struct FreqEntries *Freqs;
 };
 
-struct NodeData ** Nodes = NULL;
+struct NodeData **Nodes = NULL;
 
 int NumberOfNodes = 0;
 
 
-struct NodeLink
-{
-	struct NodeData * Call1;
-	struct NodeData * Call2;
+struct NodeLink {
+	struct NodeData *Call1;
+	struct NodeData *Call2;
 	int Type;
 	time_t LastHeard;
 };
 
-struct NodeLink ** NodeLinks = NULL;
+struct NodeLink **NodeLinks = NULL;
 
 int NumberOfNodeLinks = 0;
 
 
-struct HeardItem
-{
+struct HeardItem {
 	struct HeardItem * Next;			// Chein of heard calls
 	struct HeardItem * NextBy;			// Chain of heardby calls
 	time_t Time;
