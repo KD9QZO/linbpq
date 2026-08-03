@@ -5,6 +5,8 @@
 # To exclude i2c support run make noi2c
 # ======================================================================================================================
 
+OUTFILE := linbpq
+
 OBJS := \
 		pngwtran.o \
 		pngrtran.o \
@@ -115,13 +117,23 @@ CC  ?= gcc
 CXX ?= g++
 
 
+CSTD   ?= gnu11
+CXXSTD ?= gnu++14
+OPTLVL ?= 2
+DBGLVL ?= 0
+
+
+DEFINES := -DLINBPQ
+
+SHARED_CFLAGS := -Wall -MMD -std=$(CSTD) -O$(OPTLVL) -g$(DBGLVL) -fcommon -fasynchronous-unwind-tables
+
 MAPFILE := linbpq.map
 
 LINUX_LIBS := -lrt
 
 LDFLAGS := -Xlinker -Map=$(MAPFILE) $(LINUX_LIBS)
 
-all: CFLAGS = -DLINBPQ  -MMD -g -fcommon -fasynchronous-unwind-tables $(EXTRA_CFLAGS)
+all: CFLAGS = $(SHARED_CFLAGS)
 all: LIBS = -lpaho-mqtt3a -ljansson -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
 all: linbpq
 
@@ -136,11 +148,17 @@ ifeq ($(OS_NAME),NetBSD)
 CC  ?= cc
 CXX ?= cxx
 
-EXTRA_CFLAGS = -DFREEBSD -DNOMQTT -I/usr/pkg/include
-LDFLAGS =  -Xlinker -Map=output.map -Wl,-R/usr/pkg/lib -L/usr/pkg/lib -lrt -lutil -lexecinfo
+CSTD ?= c99
 
-all: CFLAGS = -DLINBPQ  -MMD -g -fcommon -fasynchronous-unwind-tables $(EXTRA_CFLAGS)
-all: LIBS = -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
+DEFINES += -DFREEBSD
+DEFINES += -DNOMQTT
+
+EXTRA_CFLAGS  := -I/usr/pkg/include
+LDFLAGS       := -Xlinker -Map=$(MAPFILE) -Wl,-R/usr/pkg/lib -L/usr/pkg/lib -lrt -lutil -lexecinfo
+SHARED_CFLAGS := -Wall -MMD -std=$(CSTD) -O$(OPTLVL) -g$(DBGLVL) -fcommon -fasynchronous-unwind-tables
+
+all: CFLAGS := $(SHARED_CFLAGS) $(EXTRA_CFLAGS) $(DEFINES)
+all: LIBS   := -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
 all: linbpq
 endif
 
@@ -150,10 +168,16 @@ ifeq ($(OS_NAME),FreeBSD)
 CC  ?= cc
 CXX ?= cxx
 
-EXTRA_CFLAGS := -DFREEBSD -DNOMQTT -I/usr/local/include
-LDFLAGS := -Xlinker -Map=output.map -L/usr/local/lib -lrt -liconv -lutil -lexecinfo
+CSTD ?= c99
 
-all: CFLAGS = -DLINBPQ  -MMD -g -fcommon -fasynchronous-unwind-tables $(EXTRA_CFLAGS)
+DEFINES += -DFREEBSD
+DEFINES += -DNOMQTT
+
+EXTRA_CFLAGS  := -I/usr/local/include
+LDFLAGS       := -Xlinker -Map=$(MAPFILE) -L/usr/local/lib -lrt -liconv -lutil -lexecinfo
+SHARED_CFLAGS := -Wall -MMD -std=$(CSTD) -O$(OPTLVL) -g$(DBGLVL) -fcommon -fasynchronous-unwind-tables
+
+all: CFLAGS := $(SHARED_CFLAGS) $(EXTRA_CFLAGS) $(DEFINES)
 all: LIBS =  -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
 all: linbpq
 endif
@@ -164,11 +188,17 @@ ifeq ($(OS_NAME),Darwin)
 CC  ?= gcc
 CXX ?= g++
 
-EXTRA_CFLAGS := -DMACBPQ -DNOMQTT 
-LDFLAGS := -liconv
+CSTD ?= gnu11
 
-all: CFLAGS = -DLINBPQ  -MMD -g -fcommon -fasynchronous-unwind-tables $(EXTRA_CFLAGS)
-all: LIBS = -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
+DEFINES += -DMACBPQ
+DEFINES += -DNOMQTT
+
+EXTRA_CFLAGS  :=
+LDFLAGS       := -liconv
+SHARED_CFLAGS := -Wall -MMD -std=$(CSTD) -O$(OPTLVL) -g$(DBGLVL) -fcommon -fasynchronous-unwind-tables
+
+all: CFLAGS := $(SHARED_CFLAGS) $(EXTRA_CFLAGS) $(DEFINES)
+all: LIBS   := -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
 all: linbpq
 endif
 
@@ -178,19 +208,22 @@ $(info OS_NAME is $(OS_NAME))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-
-nomqtt: CFLAGS = -DLINBPQ -MMD -fcommon -g  -rdynamic -DNOMQTT -fasynchronous-unwind-tables
-nomqtt: LIBS = -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
+nomqtt: DEFINES += -DNOMQTT
+nomqtt: EXTRA_CFLAGS := -rdynamic
+nomqtt: CFLAGS := $(SHARED_CFLAGS) $(EXTRA_CFLAGS) $(DEFINES)
+nomqtt: LIBS   := -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
 nomqtt: linbpq
 
-noi2c: CFLAGS = -DLINBPQ -MMD -DNOI2C -g  -rdynamic -fcommon -fasynchronous-unwind-tables
-noi2c: LIBS = -lpaho-mqtt3a -ljansson -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
+noi2c: DEFINES += -DNOI2C
+noi2c: EXTRA_CFLAGS := -rdynamic
+noi2c: CFLAGS := $(SHARED_CFLAGS) $(EXTRA_CFLAGS) $(DEFINES)
+noi2c: LIBS   := -lpaho-mqtt3a -ljansson -lminiupnpc -lm -lz -lpthread -lconfig -lpcap
 noi2c: linbpq
 
 
-linbpq: $(OBJS)
-	$(CC) $(OBJS) $(CFLAGS) $(LDFLAGS) $(LIBS) -o linbpq
-	sudo setcap "CAP_NET_ADMIN=ep CAP_NET_RAW=ep CAP_NET_BIND_SERVICE=ep" linbpq
+$(OUTFILE): $(OBJS)
+	$(CC) $(OBJS) $(CFLAGS) $(LDFLAGS) $(LIBS) -o $(OUTFILE)
+	sudo setcap "CAP_NET_ADMIN=ep CAP_NET_RAW=ep CAP_NET_BIND_SERVICE=ep" $(OUTFILE)
 
 -include *.d
 
@@ -200,5 +233,11 @@ clean:
 	rm -f *.d
 	rm -f *.o
 	rm -f $(OBJS)
-	rm -f linbpq
+	rm -f $(OUTFILE)
+
+clean-objs-only:
+	@echo "Cleaning object files only..."
+	rm -f *.d
+	rm -f *.o
+	rm -f $(OBJS)
 
