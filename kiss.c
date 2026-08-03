@@ -119,12 +119,12 @@ int KISSGetTCPMessage(NPASYINFO ASY);
 VOID CloseKISSPort(struct PORTCONTROL * PortVector);
 int ReadCOMBlockEx(HANDLE fd, char * Block, int MaxLength, BOOL * Error);
 void processDRATSFrame(unsigned char * Message, int Len, void * sockptr);
-VOID ConnecttoQtSM(struct PORTCONTROL * PORT);
-int	KissEncode(UCHAR * inbuff, UCHAR * outbuff, int len);
+VOID ConnecttoQtSM(struct PORTCONTROL *PORT);
+int	KissEncode(UCHAR *inbuff, UCHAR *outbuff, int len);
 
-extern struct PORTCONTROL * PORTTABLE;
-extern int	NUMBEROFPORTS;
-extern void * TRACE_Q;
+extern struct PORTCONTROL *PORTTABLE;
+extern int NUMBEROFPORTS;
+extern void *TRACE_Q;
 
 extern char FX25Modes[8][8];
 extern char IL2PModes[8][10];
@@ -138,11 +138,10 @@ int lastcount;
 
 UCHAR ENCBUFF[600];
 
-NPASYINFO KISSInfo[MAXBPQPORTS] = {0};
+NPASYINFO KISSInfo[MAXBPQPORTS] = { 0 };
 
 
-int ASYSEND(struct PORTCONTROL * PortVector, char * buffer, int count)
-{
+int ASYSEND(struct PORTCONTROL *PortVector, char *buffer, int count) {
 	NPASYINFO Port = KISSInfo[PortVector->PORTNUMBER];
 
 	if (Port == NULL)
@@ -197,9 +196,8 @@ int ASYSEND(struct PORTCONTROL * PortVector, char * buffer, int count)
 	return 0;
 }
 
-VOID EnableFLDIGIReports(struct PORTCONTROL * PORT)
-{
-	struct KISSINFO * KISS = (struct KISSINFO *)PORT;
+VOID EnableFLDIGIReports(struct PORTCONTROL *PORT)  {
+	struct KISSINFO *KISS = (struct KISSINFO*)PORT;
 	UCHAR Buffer[256];
 	UCHAR * ptr = Buffer;;
 

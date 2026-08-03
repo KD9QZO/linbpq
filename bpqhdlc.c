@@ -35,12 +35,12 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include "bpq32.h"
 
 
-extern VOID * TRACE_Q;
+extern VOID *TRACE_Q;
 
 #ifdef WIN32
 
-_CRT_OBSOLETE(GetVersionEx) errno_t __cdecl _get_winmajor(__out unsigned int * _Value);
-_CRT_OBSOLETE(GetVersionEx) errno_t __cdecl _get_winminor(__out unsigned int * _Value);
+_CRT_OBSOLETE(GetVersionEx) errno_t __cdecl _get_winmajor(__out unsigned int *_Value);
+_CRT_OBSOLETE(GetVersionEx) errno_t __cdecl _get_winminor(__out unsigned int *_Value);
 
 
 #define FILE_DEVICE_BPQHDLC			0x00008421
@@ -54,81 +54,76 @@ _CRT_OBSOLETE(GetVersionEx) errno_t __cdecl _get_winminor(__out unsigned int * _
 #define IOCTL_BPQHDLC_IOWRITE		CTL_CODE(FILE_DEVICE_BPQHDLC,0x806,METHOD_BUFFERED,FILE_ANY_ACCESS)
 
 
-VOID __cdecl Debugprintf(const char * format, ...);
+VOID __cdecl Debugprintf(const char *format, ...);
 
 
 //	Info to pass to Kernel HDLC Driver to define an SCC Subchannel
 
 typedef struct _BPQHDLC_ADDCHANNEL_INPUT {
+	ULONG IOBASE;			// IO Base Address
+	ULONG IOLEN;			// Number of Addresses
+	UCHAR Interrupt;		// Interrupt
+	UCHAR Channel;
 
-	ULONG   IOBASE;			// IO Base Address
-    ULONG	IOLEN;			// Number of Addresses
-    UCHAR   Interrupt;		// Interrupt
-	UCHAR	Channel;
+	ULONG ASIOC;			// A CHAN ADDRESSES
+	ULONG SIO;				// OUR ADDRESSES (COULD BE A OR B) 
+	ULONG SIOC;				// Our Control Channel 
+	ULONG BSIOC;			//  B CHAN CONTROL
 
-	ULONG	ASIOC;			// A CHAN ADDRESSES
-	ULONG	SIO;			// OUR ADDRESSES (COULD BE A OR B) 
-	ULONG	SIOC;			// Our Control Channel 
-	ULONG	BSIOC;			//  B CHAN CONTROL
+	VOID *OtherChannel;		// Kernel Channel record for first channel if this is 2nd channel
 
-	VOID * OtherChannel;		// Kernel Channel record for first channel if this is 2nd channel
-
-	UCHAR SOFTDCDFLAG;			// Use SoftDCD flag
+	UCHAR SOFTDCDFLAG;		// Use SoftDCD flag
 
 	int TXBRG;				// FOR CARDS WITHOUT /32 DIVIDER
 	int RXBRG;
 
 	UCHAR WR10;				// NRZ/NRZI FLAG
- 
+
 	USHORT TXDELAY;			//TX KEYUP DELAY TIMER
 	UCHAR PERSISTANCE;
-
-}  BPQHDLC_ADDCHANNEL_INPUT, *PBPQHDLC_ADDCHANNEL_INPUT;
+} BPQHDLC_ADDCHANNEL_INPUT, *PBPQHDLC_ADDCHANNEL_INPUT;
 
 
 DWORD n;
 
-HANDLE hDevice=0;
-BYTE bOutput[4]=" ";
-DWORD cb=0;
-int fResult=0;
+HANDLE hDevice = 0;
+BYTE bOutput[4] = " ";
+DWORD cb = 0;
+int fResult = 0;
 
 BOOL Win98 = FALSE;
 
 
 extern int QCOUNT;
-int Init98(HDLCDATA * PORTVEC);
-int Init2K(HDLCDATA * PORTVEC);
+int Init98(HDLCDATA *PORTVEC);
+int Init2K(HDLCDATA *PORTVEC);
 int INITPORT(PHDLCDATA PORTVEC);
 
 
 
-int HDLCRX2K(PHDLCDATA PORTVEC, UCHAR * buff)
-{
+int HDLCRX2K(PHDLCDATA PORTVEC, UCHAR *buff) {
 	ULONG Param;
-	DWORD len=0;
+	DWORD len = 0;
 
 	if (hDevice == 0)
 		return (0);
 
-
 	if (PORTVEC->DRIVERPORTTABLE == 0) return 0;
 
-	memcpy(&Param, &PORTVEC->DRIVERPORTTABLE,4);
+	memcpy(&Param, &PORTVEC->DRIVERPORTTABLE, 4);
 
 	fResult = DeviceIoControl(
-			hDevice,   // device handle
-			(Win98) ? 'G' : IOCTL_BPQHDLC_POLL,		   // control code
-			&Param, (Win98) ? (rand() & 0xff) : 4, //Input Params
-	        buff,360,&len, // output parameters
+			hDevice,								// device handle
+			(Win98) ? 'G' : IOCTL_BPQHDLC_POLL,		// control code
+			&Param, (Win98) ? (rand() & 0xff) : 4,	// Input Params
+			buff, 360, &len,						// output parameters
 			0);
 
 	return (len);
 }
 
-int HDLCTIMER2K(PHDLCDATA  PORTVEC)
-{
-	DWORD len=0;
+int HDLCTIMER2K(PHDLCDATA PORTVEC) {
+	DWORD len = 0;
 
 	if (hDevice == 0)
 		return (0);
@@ -139,13 +134,13 @@ int HDLCTIMER2K(PHDLCDATA  PORTVEC)
 			hDevice,   // device handle
 			(Win98) ? 'T' : IOCTL_BPQHDLC_TIMER,		   // control code
 			&PORTVEC->DRIVERPORTTABLE,4, //Input Params
-	        0,0,&len, // output parameters
+			0,0,&len, // output parameters
 			0);
 
 	return (0);
 }
- int HDLCTXCHECK2K(PHDLCDATA PORTVEC)
- {
+
+int HDLCTXCHECK2K(PHDLCDATA PORTVEC) {
 	DWORD Buff;
 	DWORD len=0;
 
@@ -1139,7 +1134,8 @@ int INITPORT(PHDLCDATA PORTVEC)
 
 	return FALSE;
 }
-#endif
+
+#endif	/* defined(WIN32) */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1148,59 +1144,54 @@ int INITPORT(PHDLCDATA PORTVEC)
 
 #ifdef WIN32
 #include <io.h>
-#define read _read
-#define write _write
-#define close _close
-#define open _open
+#define read	_read
+#define write	_write
+#define close	_close
+#define open	_open
 #else
 #endif
 
 
 // Linux HDLC Kernel Module Support
+// ================================
 
 #define TIOCMGET   0x5415
 
+
 PHDLCDATA FIRSTHDLCPORT = 0;
 
-int KHDLCINIT(PHDLCDATA PORTVEC)
-{
-	int ret, status = 65;
+
+int KHDLCINIT(PHDLCDATA PORTVEC) {
+	int ret;
+	int status = 65;
 	char Msg[64] = "HDLC Params";
 
 	// Only open device for first port - all ports share a kernel driver
-
-	if (FIRSTHDLCPORT == 0)
-	{
+	if (FIRSTHDLCPORT == 0) {
 		// for now just open /dev/bpqhdlc. Needs to be a param somewhere
-
 		PORTVEC->fd = open("/dev/bpqhdlc", O_RDWR);             // Open the device with read/write access
 
 		FIRSTHDLCPORT = PORTVEC;
 
-		if (PORTVEC->fd < 0)
-		{
+		if (PORTVEC->fd < 0) {
 			WritetoConsole("HDLC - Failed to open /dev/bpqhdlc\n");
 			return errno;
 		}
-
 	}
 
 	ret =  ioctl(FIRSTHDLCPORT->fd, 1, Msg);
-
 	Consoleprintf("HDLC Channel %c", PORTVEC->PORTCONTROL.CHANNELNUM);
 
 	return 0;
 }
 
-void KHDLCTX(PHDLCDATA PORTVEC, PMESSAGE Buffer)
-{
+void KHDLCTX(PHDLCDATA PORTVEC, PMESSAGE Buffer) {
 	int fd = FIRSTHDLCPORT->fd;
-	struct _LINKTABLE * LINK;
+	struct _LINKTABLE *LINK;
 	unsigned char Message[512];
-	
-	if (fd != -1)
-	{
-		int len = GetLengthfromBuffer((PDATAMESSAGE)Buffer) - (3 + sizeof(void *));
+
+	if (fd != -1) {
+		int len = GetLengthfromBuffer((PDATAMESSAGE)Buffer) - (3 + sizeof(void*));
 		int ret;
 
 		Message[0] = (PORTVEC->PORTCONTROL.CHANNELNUM - ('A' << 4));		// KISS Control
@@ -1208,8 +1199,7 @@ void KHDLCTX(PHDLCDATA PORTVEC, PMESSAGE Buffer)
 
 		ret = write(fd, Message, len + 1);
 
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			Debugprintf("Failed to write the message to the device.");
 			return;
 		}
@@ -1217,22 +1207,18 @@ void KHDLCTX(PHDLCDATA PORTVEC, PMESSAGE Buffer)
 
 	LINK = Buffer->Linkptr;
 
-	if (LINK)
-	{
+	if (LINK) {
 		if (LINK->L2TIMER)
 			LINK->L2TIMER = LINK->L2TIME;
 
 		Buffer->Linkptr = 0;	// CLEAR FLAG FROM BUFFER
 	}
 
-
 	// Pass buffer to trace routines
-
 	C_Q_ADD(&TRACE_Q, Buffer);
 }
 
-int KHDLCRX(PHDLCDATA PORTVEC)
-{
+int KHDLCRX(PHDLCDATA PORTVEC) {
 	int len;
 	PMESSAGE Buffer;
 	unsigned char packet[512] = "";
@@ -1245,17 +1231,14 @@ int KHDLCRX(PHDLCDATA PORTVEC)
 
 	len = read(fd, packet, 512);        // Read the response from the LKM
 
-	while (len)
-	{
-		if (len < 0)
-		{
+	while (len) {
+		if (len < 0) {
 			Debugprintf("bpqhdlc read failed");
 			return errno;
 		}
 		Buffer = GetBuff();
 
-		if (Buffer)
-		{
+		if (Buffer) {
 			memcpy(&Buffer->DEST, packet + 1, len - 1);	// Has KISS control on front
 			len += (3 + sizeof(void *));
 
@@ -1268,20 +1251,17 @@ int KHDLCRX(PHDLCDATA PORTVEC)
 	return 0;
 }
 
-void KHDLCTIMER(PHDLCDATA PORTVEC)
-{}
+void KHDLCTIMER(PHDLCDATA PORTVEC) {
+}
 
-void KHDLCCLOSE(PHDLCDATA PORTVEC)
-{
+void KHDLCCLOSE(PHDLCDATA PORTVEC) {
 	int fd = PORTVEC->fd;
 
 	if (fd != -1)
 		close(fd);
 }
 
-BOOL KHDLCTXCHECK(PHDLCDATA PORTVEC)
-{
+BOOL KHDLCTXCHECK(PHDLCDATA PORTVEC) {
 	return 0;
 }
-
 

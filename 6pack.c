@@ -102,9 +102,7 @@ Using code from 6pack Linux Kernel driver with the following licence and credits
 #define TRUE	1
 #define FALSE	0
 
-#define AX25_MAXDEV	16		/* MAX number of AX25 channels;
-					   This can be overridden with
-					   insmod -oax25_maxdev=nnn	*/
+#define AX25_MAXDEV	16		/* MAX number of AX25 channels; This can be overridden with insmod -oax25_maxdev=nnn */
 #define AX_MTU		236	
 
 /* 6pack protocol bytes/masks. */
@@ -123,21 +121,19 @@ Using code from 6pack Linux Kernel driver with the following licence and credits
 #define SIXP_LED_OFF		0x60
 
 /* checksum for a valid 6pack encapsulated packet */
-#define SIXP_CHKSUM		0xFF
+#define SIXP_CHKSUM			0xFF
 
 /* priority commands */
-#define SIXP_SEOF		0x40	/* TX underrun */
+#define SIXP_SEOF			0x40	/* TX underrun */
 #define SIXP_TX_URUN		0x48	/* TX underrun */
 #define SIXP_RX_ORUN		0x50	/* RX overrun */
 #define SIXP_RX_BUF_OVL		0x58	/* RX overrun */
 
-struct sixPackTNCInfo
-{
+
+struct sixPackTNCInfo {
 	// info for each TNC in chain
-
-	int                magic;
-
-	char * name;
+	int magic;
+	char *name;
 
 	/* These are pointers to the malloc()ed frame buffers. */
 	unsigned char      *rbuff;		/* receiver buffer		*/
@@ -156,83 +152,76 @@ struct sixPackTNCInfo
 	unsigned long      rx_over_errors;	/* Frame bigger then SLIP buf.  */
 
 	/* Detailed SLIP statistics. */
-	int                 mtu;		/* Our mtu (to spot changes!)   */
-	int                 buffsize;	/* Max buffers sizes            */
+	int mtu;		/* Our mtu (to spot changes!)   */
+	int buffsize;	/* Max buffers sizes            */
 
 
-	unsigned char       flags;		/* Flag values/ mode etc	*/
+	unsigned char flags;		/* Flag values/ mode etc	*/
 #define AXF_INUSE	0				/* Channel in use               */
 #define AXF_ESCAPE	1               /* ESC received                 */
 #define AXF_ERROR	2               /* Parity, etc. error           */
 #define AXF_KEEPTEST	3			/* Keepalive test flag		*/
 #define AXF_OUTWAIT	4				/* is outpacket was flag	*/
 
-	int                 mode;
-
+	int mode;
 
 	/* variables for the state machine */
+	unsigned char tnc_ok;
+	unsigned char status;
+	unsigned char status1;
+	unsigned char status2;
 
-	unsigned char	tnc_ok;
-	unsigned char	status;
-	unsigned char	status1;
-	unsigned char	status2;
+	unsigned char duplex;
+	unsigned char led_state;
+	unsigned char tx_enable;
 
-	unsigned char	duplex;
-	unsigned char	led_state;
-	unsigned char	tx_enable;
-	
-	unsigned char	raw_buf[4];		/* receive buffer */
-	unsigned char	cooked_buf[400];	/* receive buffer after 6pack decoding */
-	
-	unsigned int	rx_count;		/* counter for receive buffer */
-	unsigned int	rx_count_cooked;	/* counter for receive buffer after 6pack decoding */
+	unsigned char raw_buf[4];		/* receive buffer */
+	unsigned char cooked_buf[400];	/* receive buffer after 6pack decoding */
 
-	unsigned char	tx_delay;
-	unsigned char	persistance;
-	unsigned char	slottime;
+	unsigned int rx_count;		/* counter for receive buffer */
+	unsigned int rx_count_cooked;	/* counter for receive buffer after 6pack decoding */
 
+	unsigned char tx_delay;
+	unsigned char persistance;
+	unsigned char slottime;
 };
 
 
-struct sixPackPortInfo
-{
+struct sixPackPortInfo {
 	// Per port (chain of TNC's)
-
 	unsigned int linkOK;			// Set if response is received
 	unsigned int reinitTimer;
-
-	struct sixPackTNCInfo * TNCS[8];	// Max TNCs in chain Not sure if real 6pack uses o or 1 for first
+	struct sixPackTNCInfo *TNCS[8];	// Max TNCs in chain Not sure if real 6pack uses o or 1 for first
 };
 
 
-#define AX25_MAGIC		0x5316
+#define AX25_MAGIC			0x5316
 #define SIXP_DRIVER_MAGIC	0x5304
 
 #define SIXP_INIT_RESYNC_TIMEOUT	150	/* in 10 ms */
-#define SIXP_RESYNC_TIMEOUT		500	/* in 10 ms */
+#define SIXP_RESYNC_TIMEOUT			500	/* in 10 ms */
 
 /* default radio channel access parameters */
-#define SIXP_TXDELAY			25	/* in 10 ms */
-#define SIXP_PERSIST			50
-#define SIXP_SLOTTIME			10	/* in 10 ms */
+#define SIXP_TXDELAY				25	/* in 10 ms */
+#define SIXP_PERSIST				50
+#define SIXP_SLOTTIME				10	/* in 10 ms */
 
 static int sixpack_encaps(unsigned char *tx_buf, unsigned char *tx_buf_raw, int length, unsigned char tx_delay);
-static void sixpack_decaps(struct sixPackPortInfo *, unsigned char);
+static void sixpack_decaps(struct sixPackPortInfo*, unsigned char);
 
-static void decode_prio_command(unsigned char, struct sixPackTNCInfo *);
-static void decode_std_command(unsigned char, struct sixPackTNCInfo *);
-static void decode_data(unsigned char, struct sixPackTNCInfo *);
+static void decode_prio_command(unsigned char, struct sixPackTNCInfo*);
+static void decode_std_command(unsigned char, struct sixPackTNCInfo*);
+static void decode_data(unsigned char, struct sixPackTNCInfo*);
 static void resync_tnc(unsigned long);
 static void xmit_on_air(struct sixPackTNCInfo *ax);
 static void start_tx_timer(struct sixPackTNCInfo *ax);
 int Connectto6Pack(int port);
 
-VOID __cdecl Debugprintf(const char * format, ...);
+VOID __cdecl Debugprintf(const char *format, ...);
 
 /* Set the "sending" flag.  This must be atomic, hence the ASM. */
 
-static void ax_lock(struct sixPackTNCInfo *ax)
-{
+static void ax_lock(struct sixPackTNCInfo *ax) {
 //	if (test_and_set_bit(0, (void *)&ax->dev->tbusy))
 //		printk(KERN_ERR "6pack: %s: trying to lock already locked device!\n", ax->dev->name);
 }
@@ -245,14 +234,12 @@ static void ax_unlock(struct sixPackTNCInfo *ax)
 //		printk(KERN_ERR "6pack: %s: trying to unlock already unlocked device!\n", ax->dev->name);
 }
 /* Send one completely decapsulated AX.25 packet to the AX.25 layer. */
-static void ax_bump(struct sixPackTNCInfo *ax)
-{
+static void ax_bump(struct sixPackTNCInfo *ax) {
 }
 
-VOID SixPackProcessReceivedPacket(struct TNCINFO * TNC)
-{
+VOID SixPackProcessReceivedPacket(struct TNCINFO *TNC) {
 	int InputLen, MsgLen;
-	unsigned char * ptr;
+	unsigned char *ptr;
 	char Buffer[4096];
 
 	if (TNC->InputLen > 8000)	// Shouldnt have packets longer than this
@@ -260,10 +247,8 @@ VOID SixPackProcessReceivedPacket(struct TNCINFO * TNC)
 
 	InputLen = recv(TNC->TCPSock, &TNC->ARDOPBuffer[TNC->InputLen], 8192 - TNC->InputLen, 0);
 
-	if (InputLen == 0 || InputLen == SOCKET_ERROR)
-	{
+	if (InputLen == 0 || InputLen == SOCKET_ERROR) {
 		// Does this mean closed?
-
 		int err = GetLastError();
 
 		closesocket(TNC->TCPSock);
@@ -276,19 +261,16 @@ VOID SixPackProcessReceivedPacket(struct TNCINFO * TNC)
 		sprintf(TNC->WEB_COMMSSTATE, "Connection to TNC lost");
 		MySetWindowText(TNC, TNC->xIDC_COMMSSTATE, TNC->WEB_COMMSSTATE);
 
-		return;					
+		return;
 	}
 
 	TNC->InputLen += InputLen;
-
 	// Process Bytes
-
 }
 
 
 
-static int sixpack_encaps(unsigned char *tx_buf, unsigned char *tx_buf_raw, int length, unsigned char tx_delay)
-{
+static int sixpack_encaps(unsigned char *tx_buf, unsigned char *tx_buf_raw, int length, unsigned char tx_delay) {
 	int count = 0;
 	unsigned char checksum = 0, buf[400];
 	int raw_count = 0;
@@ -411,8 +393,7 @@ void decode_prio_command(unsigned char cmd, struct sixPackTNCInfo *ax)
 	ax->status1 = cmd & SIXP_PRIO_DATA_MASK;
 }
 
-/* try to resync the TNC. Called by the resync timer defined in
-  decode_prio_command */
+/* try to resync the TNC. Called by the resync timer defined in decode_prio_command */
 
 static void resync_tnc(unsigned long channel)
 {
@@ -2122,9 +2103,4 @@ Lost:
 	sprintf(Msg, "6Pack Thread Terminated Port %d\r\n", TNC->Port);
 	WritetoConsole(Msg);
 }
-
-
-
-
-
 

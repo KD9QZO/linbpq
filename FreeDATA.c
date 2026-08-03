@@ -40,46 +40,46 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 
 #define FREEDATABUFLEN 16384				// TCP buffer size
 
-int KillTNC(struct TNCINFO * TNC);
-static int RestartTNC(struct TNCINFO * TNC);
+int KillTNC(struct TNCINFO *TNC);
+static int RestartTNC(struct TNCINFO *TNC);
 
 
-void hookL4SessionAttempt(struct STREAMINFO * , char * remotecall, char * ourcall);
-void hookL4SessionAccepted(struct STREAMINFO * , char * remotecall, char * ourcall);
-void hookL4SessionDeleted(struct TNCINFO * TNC, void * STREAM);
+void hookL4SessionAttempt(struct STREAMINFO * , char *remotecall, char *ourcall);
+void hookL4SessionAccepted(struct STREAMINFO * , char *remotecall, char *ourcall);
+void hookL4SessionDeleted(struct TNCINFO *TNC, void *STREAM);
 
 extern int (WINAPI FAR *GetModuleFileNameExPtr)();
 extern int (WINAPI FAR *EnumProcessesPtr)();
 static int Socket_Data(int sock, int error, int eventcode);
-VOID MoveWindows(struct TNCINFO * TNC);
-static VOID SendToTNC(struct TNCINFO * TNC, int Stream, UCHAR * Encoded, int EncLen);
-int DoScanLine(struct TNCINFO * TNC, char * Buff, int Len);
-VOID SendInitScript(struct TNCINFO * TNC);
-int ProcessEscape(UCHAR * TXMsg);
-static void SendPoll(struct TNCINFO * TNC);
-void SendMode(struct TNCINFO * TNC);
+VOID MoveWindows(struct TNCINFO *TNC);
+static VOID SendToTNC(struct TNCINFO *TNC, int Stream, UCHAR *Encoded, int EncLen);
+int DoScanLine(struct TNCINFO *TNC, char *Buff, int Len);
+VOID SendInitScript(struct TNCINFO *TNC);
+int ProcessEscape(UCHAR *TXMsg);
+static void SendPoll(struct TNCINFO *TNC);
+void SendMode(struct TNCINFO *TNC);
 static int ConnecttoFreeData(int port);
-void ConnectTNCPort(struct TNCINFO * TNC);
-int FreeDataSendCommand(struct TNCINFO * TNC, char * data);
-static void SendPing(struct TNCINFO * TNC, char * Call);
-static void SendCQ(struct TNCINFO * TNC);
-char * stristr (char *ch1, char *ch2);
-int zEncode(unsigned char * in, unsigned char * out, int len, unsigned char * Banned);
-static void SendDataMsg(struct TNCINFO * TNC, char * Call, char * Msg, int Len);
-static int SendAsRaw(struct TNCINFO * TNC, char * Call, char * myCall, char * Msg, int Len);
-static int SendAsFile(struct TNCINFO * TNC, char * Call, char * Msg, int Len);
-char * byte_base64_encode(char *str, int len);
+void ConnectTNCPort(struct TNCINFO *TNC);
+int FreeDataSendCommand(struct TNCINFO *TNC, char *data);
+static void SendPing(struct TNCINFO *TNC, char *Call);
+static void SendCQ(struct TNCINFO *TNC);
+char *stristr (char *ch1, char *ch2);
+int zEncode(unsigned char *in, unsigned char *out, int len, unsigned char *Banned);
+static void SendDataMsg(struct TNCINFO *TNC, char *Call, char *Msg, int Len);
+static int SendAsRaw(struct TNCINFO *TNC, char *Call, char *myCall, char *Msg, int Len);
+static int SendAsFile(struct TNCINFO *TNC, char *Call, char *Msg, int Len);
+char *byte_base64_encode(char *str, int len);
 void xdecodeblock( unsigned char in[4], unsigned char out[3] );
-void FlushData(struct TNCINFO * TNC);
-void CountRestarts(struct TNCINFO * TNC);
-void StopTNC(struct TNCINFO * TNC);
-int FreeDataConnect(struct TNCINFO * TNC, char * Call);
-int FreeDataDisconnect(struct TNCINFO * TNC);
-int FreeGetData(struct TNCINFO * TNC);
-static void SendBeacon(struct TNCINFO * TNC, int Interval);
-void buildParamString(struct TNCINFO * TNC, char * line);
-VOID FreeDataSuspendPort(struct TNCINFO * TNC, struct TNCINFO * ThisTNC);
-VOID FreeDataReleasePort(struct TNCINFO * TNC);
+void FlushData(struct TNCINFO *TNC);
+void CountRestarts(struct TNCINFO *TNC);
+void StopTNC(struct TNCINFO *TNC);
+int FreeDataConnect(struct TNCINFO *TNC, char *Call);
+int FreeDataDisconnect(struct TNCINFO *TNC);
+int FreeGetData(struct TNCINFO *TNC);
+static void SendBeacon(struct TNCINFO *TNC, int Interval);
+void buildParamString(struct TNCINFO *TNC, char *line);
+VOID FreeDataSuspendPort(struct TNCINFO *TNC, struct TNCINFO *ThisTNC);
+VOID FreeDataReleasePort(struct TNCINFO *TNC);
 
 
 static char ClassName[]="FREEDATASTATUS";
@@ -98,9 +98,9 @@ extern int SemHeldByAPI;
 
 static RECT Rect;
 
-static int ProcessLine(char * buf, int Port);
+static int ProcessLine(char *buf, int Port);
 
-VOID WritetoTrace(struct TNCINFO * TNC, char * Msg, int Len);
+VOID WritetoTrace(struct TNCINFO *TNC, char *Msg, int Len);
 
 #define MAXRXSIZE 512000		// Sets max size for file transfer (less base64 overhead
 
@@ -128,8 +128,8 @@ WAVEOUTCAPS pwoc;
 WAVEINCAPS pwic;
 
 
-char * CaptureDevices = NULL;
-char * PlaybackDevices = NULL;
+char *CaptureDevices = NULL;
+char *PlaybackDevices = NULL;
 
 HWAVEOUT hWaveOut = 0;
 HWAVEIN hWaveIn = 0;
@@ -137,7 +137,7 @@ HWAVEIN hWaveIn = 0;
 #endif
 
 
-char * gen_uuid()
+char *gen_uuid()
 {
     char v[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 	int i;
@@ -165,15 +165,15 @@ char * gen_uuid()
     return buf;
 }
 
-static int ProcessLine(char * buf, int Port)
+static int ProcessLine(char *buf, int Port)
 {
-	UCHAR * ptr,* p_cmd;
-	char * p_ipad = 0;
-	char * p_port = 0;
+	UCHAR *ptr,*p_cmd;
+	char *p_ipad = 0;
+	char *p_port = 0;
 	unsigned short WINMORport = 0;
 	int BPQport;
 	int len=510;
-	struct TNCINFO * TNC = TNCInfo[Port];
+	struct TNCINFO *TNC = TNCInfo[Port];
 	char errbuf[256];
 
 	strcpy(errbuf, buf);
@@ -326,10 +326,10 @@ static int ProcessLine(char * buf, int Port)
 	return (TRUE);	
 }
 
-char * Config;
-static char * ptr1, * ptr2;
+char *Config;
+static char *ptr1, *ptr2;
 
-int FreeDataGetLine(char * buf)
+int FreeDataGetLine(char *buf)
 {
 loop:
 
@@ -353,9 +353,9 @@ loop:
 }
 
 
-VOID SuspendOtherPorts(struct TNCINFO * ThisTNC);
-VOID ReleaseOtherPorts(struct TNCINFO * ThisTNC);
-VOID WritetoTrace(struct TNCINFO * TNC, char * Msg, int Len);
+VOID SuspendOtherPorts(struct TNCINFO *ThisTNC);
+VOID ReleaseOtherPorts(struct TNCINFO *ThisTNC);
+VOID WritetoTrace(struct TNCINFO *TNC, char *Msg, int Len);
 
 
 
@@ -363,7 +363,7 @@ static time_t ltime;
 
 
 
-static VOID SendToTNC(struct TNCINFO * TNC, int Stream, UCHAR * Encoded, int EncLen)
+static VOID SendToTNC(struct TNCINFO *TNC, int Stream, UCHAR *Encoded, int EncLen)
 {
 	if (TNC->hDevice)
 	{
@@ -384,7 +384,7 @@ static VOID SendToTNC(struct TNCINFO * TNC, int Stream, UCHAR * Encoded, int Enc
 }
 
 
-VOID FreeDataChangeMYC(struct TNCINFO * TNC, char * Call)
+VOID FreeDataChangeMYC(struct TNCINFO *TNC, char *Call)
 {
 	UCHAR TXMsg[100];
 	int datalen;
@@ -404,14 +404,14 @@ static size_t ExtProc(int fn, int port, PDATAMESSAGE buff)
 	PMSGWITHLEN buffptr;
 //	char txbuff[500];
 	unsigned int txlen = 0;
-	UCHAR * TXMsg;
+	UCHAR *TXMsg;
 
 	size_t Param;
 	int Stream = 0;
 	HKEY hKey=0;
-	struct TNCINFO * TNC = TNCInfo[port];
-	struct STREAMINFO * STREAM = &TNC->Streams[0];
-	struct ScanEntry * Scan;
+	struct TNCINFO *TNC = TNCInfo[port];
+	struct STREAMINFO *STREAM = &TNC->Streams[0];
+	struct ScanEntry *Scan;
 
 	if (TNC == NULL)
 		return 0;							// Port not defined
@@ -468,12 +468,12 @@ static size_t ExtProc(int fn, int port, PDATAMESSAGE buff)
 		while (TNC->PortRecord->UI_Q)
 		{
 			int datalen;
-			char * Buffer;
+			char *Buffer;
 			char FECMsg[512];
 			char Call[12] = "           ";		
-			struct _MESSAGE * buffptr;
+			struct _MESSAGE *buffptr;
 			int CallLen;
-			char * ptr = FECMsg;
+			char *ptr = FECMsg;
 	
 			buffptr = Q_REM(&TNC->PortRecord->UI_Q);
 
@@ -610,7 +610,7 @@ static size_t ExtProc(int fn, int port, PDATAMESSAGE buff)
 			if (STREAM->BPQtoPACTOR_Q)
 			{
 				PMSGWITHLEN buffptr = (PMSGWITHLEN)Q_REM(&STREAM->BPQtoPACTOR_Q);
-				UCHAR * data = &buffptr->Data[0];
+				UCHAR *data = &buffptr->Data[0];
 				STREAM->FramesQueued--;
 				txlen = (int)buffptr->Len;
 
@@ -693,7 +693,7 @@ static size_t ExtProc(int fn, int port, PDATAMESSAGE buff)
 			// Chat Mode - Send to other end
 
 			char reply[512] = "m";
-			char * p;
+			char *p;
 			int Len;
 
 			if (_stricmp(TXMsg, "/ex\r") == 0)
@@ -787,7 +787,7 @@ static size_t ExtProc(int fn, int port, PDATAMESSAGE buff)
 
 		if (_memicmp(&buff->L2DATA[0], "PING ", 5) == 0)
 		{
-			char * Call = &buff->L2DATA[5];
+			char *Call = &buff->L2DATA[5];
 			PMSGWITHLEN buffptr = (PMSGWITHLEN)GetBuff();
 
 			strlop(Call, 13);
@@ -858,7 +858,7 @@ static size_t ExtProc(int fn, int port, PDATAMESSAGE buff)
 
 		if (_memicmp(&buff->L2DATA[0], "CHAT ", 5) == 0)
 		{
-			char * Call = &buff->L2DATA[5];
+			char *Call = &buff->L2DATA[5];
 			PMSGWITHLEN buffptr = (PMSGWITHLEN)GetBuff();
 
 			strlop(Call, 13);
@@ -902,7 +902,7 @@ static size_t ExtProc(int fn, int port, PDATAMESSAGE buff)
 			char Connect[80];
 			char loppedCall[10];
 			
-			char * ptr = strchr(&buff->L2DATA[2], 13);
+			char *ptr = strchr(&buff->L2DATA[2], 13);
 
 			if (ptr)
 				*ptr = 0;
@@ -1064,7 +1064,7 @@ static size_t ExtProc(int fn, int port, PDATAMESSAGE buff)
 	return 0;
 }
 
-VOID FreeDataReleaseTNC(struct TNCINFO * TNC)
+VOID FreeDataReleaseTNC(struct TNCINFO *TNC)
 {
 	// Set mycall back to Node or Port Call, and Start Scanner
 
@@ -1083,20 +1083,20 @@ VOID FreeDataReleaseTNC(struct TNCINFO * TNC)
 
 }
 
-VOID FreeDataSuspendPort(struct TNCINFO * TNC, struct TNCINFO * ThisTNC)
+VOID FreeDataSuspendPort(struct TNCINFO *TNC, struct TNCINFO *ThisTNC)
 {
 //	char CMD[] = "{\"type\" : \"set\", \"command\" : \"listen\", \"state\": \"False\"}\n";
 //	send(TNC->TCPDataSock, CMD, strlen(CMD), 0);
 }
 
-VOID FreeDataReleasePort(struct TNCINFO * TNC)
+VOID FreeDataReleasePort(struct TNCINFO *TNC)
 {
 	char CMD[] = "{\"type\" : \"set\", \"command\" : \"listen\", \"state\": \"True\"}\n";
 	send(TNC->TCPDataSock, CMD, strlen(CMD), 0);
 }
 
 
-static int WebProc(struct TNCINFO * TNC, char * Buff, BOOL LOCAL)
+static int WebProc(struct TNCINFO *TNC, char *Buff, BOOL LOCAL)
 {
 	int Len = sprintf(Buff, 
 		"<h2><form method=post target=\"POPUPW\" onsubmit=\"POPUPW = window.open('about:blank','POPUPW',"
@@ -1144,12 +1144,12 @@ extern HKEY REGTREE;
 static LRESULT CALLBACK PacWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wmId, wmEvent;
-	MINMAXINFO * mmi;
+	MINMAXINFO *mmi;
 	PAINTSTRUCT ps;
 	HDC hdc;
 
 	int i;
-	struct TNCINFO * TNC;
+	struct TNCINFO *TNC;
 
 	HKEY hKey;
 	char Key[80];
@@ -1347,13 +1347,13 @@ static LRESULT CALLBACK PacWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
 
 
-VOID * FreeDataExtInit(EXTPORTDATA * PortEntry)
+VOID *FreeDataExtInit(EXTPORTDATA *PortEntry)
 {
 	int port;
 	char Msg[255];
-	char * ptr;
-	struct TNCINFO * TNC;
-	char * TempScript;
+	char *ptr;
+	struct TNCINFO *TNC;
+	char *TempScript;
 	u_long param = 1;
 	int line;
 	int i;
@@ -1486,10 +1486,10 @@ VOID * FreeDataExtInit(EXTPORTDATA * PortEntry)
 	}
 	else
 	{
-		APPLCALLS * APPL;
+		APPLCALLS *APPL;
 		char Appl[11] = "";
-		char * List = TNC->FreeDataInfo->SSIDList;
-		char * SSIDptr;
+		char *List = TNC->FreeDataInfo->SSIDList;
+		char *SSIDptr;
 		int SSID;
 		int Listptr;
 
@@ -1677,21 +1677,21 @@ VOID * FreeDataExtInit(EXTPORTDATA * PortEntry)
 }
 
 
-VOID TidyClose(struct TNCINFO * TNC, int Stream)
+VOID TidyClose(struct TNCINFO *TNC, int Stream)
 {
 	// We don't get data acks, so can't check for bytes outstanding
 	
 	FreeDataDisconnect(TNC);
 }
 
-VOID ForcedClose(struct TNCINFO * TNC, int Stream)
+VOID ForcedClose(struct TNCINFO *TNC, int Stream)
 {
 	FreeDataDisconnect(TNC);
 }
 
 
 
-VOID CloseComplete(struct TNCINFO * TNC, int Stream)
+VOID CloseComplete(struct TNCINFO *TNC, int Stream)
 {
 	if (Stream == 0)
 	{
@@ -1699,16 +1699,16 @@ VOID CloseComplete(struct TNCINFO * TNC, int Stream)
 	}
 }
 
-VOID FreeDataAbort(struct TNCINFO * TNC)
+VOID FreeDataAbort(struct TNCINFO *TNC)
 {
 	FreeDataSendCommand(TNC, "ABORT\r");
 }
 
 // Host Mode Stuff (we reuse some routines in SCSPactor)
 
-VOID FreeDataDoTermModeTimeout(struct TNCINFO * TNC)
+VOID FreeDataDoTermModeTimeout(struct TNCINFO *TNC)
 {
-	UCHAR * Poll = TNC->TXBuffer;
+	UCHAR *Poll = TNC->TXBuffer;
 
 	if (TNC->ReinitState == 0)
 	{
@@ -1734,11 +1734,11 @@ VOID FreeDataDoTermModeTimeout(struct TNCINFO * TNC)
 
 static RECT Rect1 = {30, 160, 400, 195};
 
-int zEncode(unsigned char * in, unsigned char * out, int len, unsigned char * Banned)
+int zEncode(unsigned char *in, unsigned char *out, int len, unsigned char *Banned)
 {
 	// Replace forbidden chars with =xx
 
-	unsigned char * ptr = out;
+	unsigned char *ptr = out;
 	unsigned char c;
 
 	while (len--)
@@ -1760,22 +1760,22 @@ int zEncode(unsigned char * in, unsigned char * out, int len, unsigned char * Ba
 
 
 
-VOID FreeDataProcessTNCMessage(struct TNCINFO * TNC, char * Call, unsigned char * Msg, int Len)
+VOID FreeDataProcessTNCMessage(struct TNCINFO *TNC, char *Call, unsigned char *Msg, int Len)
 {
 	PMSGWITHLEN buffptr;
-	struct STREAMINFO * STREAM = &TNC->Streams[0];
-	struct FreeDataINFO * Modem = TNC->FreeDataInfo;
-	char * toCall, * fromCall, * tncCall, *Context;
-	char * ptr;
+	struct STREAMINFO *STREAM = &TNC->Streams[0];
+	struct FreeDataINFO *Modem = TNC->FreeDataInfo;
+	char *toCall, *fromCall, *tncCall, *Context;
+	char *ptr;
 	char a, b;
 	unsigned char axcall[7];
 	char AppName[13] = "";
-	APPLCALLS * APPL;
-	char * ApplPtr = APPLS;
+	APPLCALLS *APPL;
+	char *ApplPtr = APPLS;
 	int App;
 	char Appl[10];
-	struct WL2KInfo * WL2K = TNC->WL2K;
-	TRANSPORTENTRY * SESS;
+	struct WL2KInfo *WL2K = TNC->WL2K;
+	TRANSPORTENTRY *SESS;
 
 	// First Byte of Message is Type. Messages can be commands or short (<120) data packets
 	// Data is encoded with =xx replacing restricted chars
@@ -1816,7 +1816,7 @@ VOID FreeDataProcessTNCMessage(struct TNCINFO * TNC, char * Call, unsigned char 
 
 		if (TNC->PortRecord->PORTCONTROL.PERMITTEDCALLS)
 		{
-			UCHAR * ptr = TNC->PortRecord->PORTCONTROL.PERMITTEDCALLS;
+			UCHAR *ptr = TNC->PortRecord->PORTCONTROL.PERMITTEDCALLS;
 
 			while (TRUE)
 			{
@@ -2069,12 +2069,12 @@ VOID FreeDataProcessTNCMessage(struct TNCINFO * TNC, char * Call, unsigned char 
 		// Seems to be f null fn null data
 		//f.;Makefile.;.;123123123.;
 	{
-		char * FN;
+		char *FN;
 		time_t CRC;
 		int FileLen;
 		char Filename[256];
-		FILE * fp1;
-		unsigned char * ptr;
+		FILE *fp1;
+		unsigned char *ptr;
 		char Text[64];
 		int textLen;
 
@@ -2135,20 +2135,20 @@ VOID FreeDataProcessTNCMessage(struct TNCINFO * TNC, char * Call, unsigned char 
 }
 
 
-VOID FreeDataProcessNewConnect(struct TNCINFO * TNC, char * fromCall, char * toCall)
+VOID FreeDataProcessNewConnect(struct TNCINFO *TNC, char *fromCall, char *toCall)
 {
 	PMSGWITHLEN buffptr;
-	struct STREAMINFO * STREAM = &TNC->Streams[0];
-	struct FreeDataINFO * Modem = TNC->FreeDataInfo;
-	char * ptr;
+	struct STREAMINFO *STREAM = &TNC->Streams[0];
+	struct FreeDataINFO *Modem = TNC->FreeDataInfo;
+	char *ptr;
 	unsigned char axcall[7];
 	char AppName[13] = "";
-	APPLCALLS * APPL;
-	char * ApplPtr = APPLS;
+	APPLCALLS *APPL;
+	char *ApplPtr = APPLS;
 	int App;
 	char Appl[10];
-	struct WL2KInfo * WL2K = TNC->WL2K;
-	TRANSPORTENTRY * SESS;
+	struct WL2KInfo *WL2K = TNC->WL2K;
+	TRANSPORTENTRY *SESS;
 
 	strcpy(TNC->FreeDataInfo->farCall, fromCall);
 
@@ -2174,7 +2174,7 @@ VOID FreeDataProcessNewConnect(struct TNCINFO * TNC, char * fromCall, char * toC
 
 	if (TNC->PortRecord->PORTCONTROL.PERMITTEDCALLS)
 	{
-		UCHAR * ptr = TNC->PortRecord->PORTCONTROL.PERMITTEDCALLS;
+		UCHAR *ptr = TNC->PortRecord->PORTCONTROL.PERMITTEDCALLS;
 
 		while (TRUE)
 		{

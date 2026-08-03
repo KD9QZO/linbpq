@@ -1,3 +1,8 @@
+/**
+ * \file APRSCode.c
+ * \brief Code for APRS
+ */
+
 /*
 Copyright 2001-2022 John Wiseman G8BPQ
 
@@ -40,70 +45,87 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include <sys/mman.h>
 #include <sys/un.h>
 
+
 int sfd;
-struct sockaddr_un my_addr, peer_addr;
+struct sockaddr_un my_addr;
+struct sockaddr_un peer_addr;
 socklen_t peer_addr_size;
 
 
 #endif
 
+/**
+ * \brief Maximum age
+ *
+ * \note Default is <b>12 hours</b>
+ */
+#define MAXAGE			(60 * 60 * 12)
 
-#define MAXAGE 3600 * 12	  // 12 Hours
-#define MAXCALLS 20			  // Max Flood, Trace and Digi
-#define GATETIMELIMIT 40 * 60 // Don't gate to RF if station not heard for this time (40 mins)
+/*! \brief Maximum flood, trace, and digi */
+#define MAXCALLS		20
 
-static BOOL APIENTRY  GETSENDNETFRAMEADDR();
+/**
+ * \brief Time limit for gating an APRS-IS station to RF
+ *
+ * Don't gate an APRS-IS station to RF if the station is not heard for this amount of time.
+ *
+ * \note Default is <b>40 minutes</b>
+ */
+#define GATETIMELIMIT	(60 * 40)
+
+
+static BOOL APIENTRY GETSENDNETFRAMEADDR();
 static VOID DoSecTimer();
 static VOID DoMinTimer();
-static int APRSProcessLine(char * buf);
+static int APRSProcessLine(char *buf);
 static BOOL APRSReadConfigFile();
-VOID APRSISThread(void * Report);
-VOID __cdecl Debugprintf(const char * format, ...);
-VOID __cdecl Consoleprintf(const char * format, ...);
-BOOL APIENTRY  Send_AX(PMESSAGE Block, DWORD Len, UCHAR Port);
+VOID APRSISThread(void *Report);
+VOID __cdecl Debugprintf(const char *format, ...);
+VOID __cdecl Consoleprintf(const char *format, ...);
+BOOL APIENTRY Send_AX(PMESSAGE Block, DWORD Len, UCHAR Port);
 VOID Send_AX_Datagram(PDIGIMESSAGE Block, DWORD Len, UCHAR Port);
-int APRSDecodeFrame(char * msg, char * buffer, time_t Stamp, uint64_t Mask);		// Unsemaphored DecodeFrame
-APRSHEARDRECORD * UpdateHeard(UCHAR * Call, int Port);
-BOOL CheckforDups(char * Call, char * Msg, int Len);
-VOID ProcessQuery(char * Query);
-VOID ProcessSpecificQuery(char * Query, int Port, char * Origin, char * DestPlusDigis);
-VOID CheckandDigi(DIGIMESSAGE * Msg, int Port, int FirstUnused, int Digis, int Len);		
-VOID SendBeacon(int toPort, char * Msg, BOOL SendISStatus, BOOL SendSOGCOG);
-Dll BOOL APIENTRY PutAPRSMessage(char * Frame, int Len);
-VOID ProcessAPRSISMsg(char * APRSMsg);
+int APRSDecodeFrame(char *msg, char *buffer, time_t Stamp, uint64_t Mask);		// Unsemaphored DecodeFrame
+APRSHEARDRECORD *UpdateHeard(UCHAR *Call, int Port);
+BOOL CheckforDups(char *Call, char *Msg, int Len);
+VOID ProcessQuery(char *Query);
+VOID ProcessSpecificQuery(char *Query, int Port, char *Origin, char *DestPlusDigis);
+VOID CheckandDigi(DIGIMESSAGE *Msg, int Port, int FirstUnused, int Digis, int Len);		
+VOID SendBeacon(int toPort, char *Msg, BOOL SendISStatus, BOOL SendSOGCOG);
+Dll BOOL APIENTRY PutAPRSMessage(char *Frame, int Len);
+VOID ProcessAPRSISMsg(char *APRSMsg);
 static VOID SendtoDigiPorts(PDIGIMESSAGE Block, DWORD Len, UCHAR Port);
-APRSHEARDRECORD * FindStationInMH(char * call);
+APRSHEARDRECORD *FindStationInMH(char *call);
 BOOL OpenGPSPort();
 void PollGPSIn();
 int CountLocalStations();
-BOOL SendAPPLAPRSMessage(char * Frame);
-VOID SendAPRSMessage(char * Message, int toPort);
-static VOID TCPConnect(void * unuxed);
-struct STATIONRECORD * DecodeAPRSISMsg(char * msg);
-struct STATIONRECORD * ProcessRFFrame(char * buffer, int len, int * ourMessage);
+BOOL SendAPPLAPRSMessage(char *Frame);
+VOID SendAPRSMessage(char *Message, int toPort);
+static VOID TCPConnect(void *unuxed);
+struct STATIONRECORD *DecodeAPRSISMsg(char *msg);
+struct STATIONRECORD *ProcessRFFrame(char *buffer, int len, int *ourMessage);
 VOID APRSSecTimer();
 double myDistance(double laa, double loa, BOOL KM);
-struct STATIONRECORD * FindStation(char * Call, BOOL AddIfNotFound);
-int DecodeAPRSPayload(char * Payload, struct STATIONRECORD * Station);
-BOOL KillOldTNC(char * Path);
+struct STATIONRECORD *FindStation(char *Call, BOOL AddIfNotFound);
+int DecodeAPRSPayload(char *Payload, struct STATIONRECORD *Station);
+BOOL KillOldTNC(char *Path);
 
-BOOL ToLOC(double Lat, double Lon , char * Locator);
-BOOL InternalSendAPRSMessage(char * Text, char * Call);
-void UndoTransparency(char * input);
-char * __cdecl Cmdprintf(TRANSPORTENTRY * Session, char * Bufferptr, const char * format, ...);
-char * GetStandardPage(char * FN, int * Len);
+BOOL ToLOC(double Lat, double Lon , char *Locator);
+BOOL InternalSendAPRSMessage(char *Text, char *Call);
+void UndoTransparency(char *input);
+char *__cdecl Cmdprintf(TRANSPORTENTRY *Session, char *Bufferptr, const char *format, ...);
+char *GetStandardPage(char *FN, int *Len);
 VOID WriteMiniDump();
 BOOL ProcessConfig();
-int ProcessAISMessage(char * msg, int len);
+int ProcessAISMessage(char *msg, int len);
 int read_png(unsigned char *bytes);
-VOID sendandcheck(SOCKET sock, const char * Buffer, int Len);
-void SaveAPRSMessage(struct APRSMESSAGE * ptr);
+VOID sendandcheck(SOCKET sock, const char *Buffer, int Len);
+void SaveAPRSMessage(struct APRSMESSAGE *ptr);
 void ClearSavedMessages();
 void GetSavedAPRSMessages();
-static VOID GPSDConnect(void * unused);
+static VOID GPSDConnect(void *unused);
 int CanPortDigi(int Port);
-int FromLOC(char * Locator, double * pLat, double * pLon);
-BOOL CheckExcludeList(UCHAR * Call);
+int FromLOC(char *Locator, double *pLat, double *pLon);
+BOOL CheckExcludeList(UCHAR *Call);
 
 extern int SemHeldByAPI;
 extern int APRSMONDECODE();
@@ -114,14 +136,14 @@ BOOL SaveAPRSMsgs = 0;
 
 BOOL LogAPRSIS = FALSE;
 
-// All data should be initialised to force into shared segment
+// All data should be initialized to force into shared segment
 
-static char ConfigClassName[]="CONFIG";
+static char ConfigClassName[] = "CONFIG";
 
-extern BPQVECSTRUC * APRSMONVECPTR;
+extern BPQVECSTRUC *APRSMONVECPTR;
 
 extern int MONDECODE();
-extern VOID * zalloc(int len);
+extern VOID *zalloc(int len);
 extern BOOL StartMinimized;
 
 extern char TextVerstring[];
@@ -138,8 +160,12 @@ static int MinTimer = 60;
 BOOL APRSApplConnected = FALSE;  
 BOOL APRSWeb = FALSE;  
 
-void * APPL_Q = 0;				// Queue of frames for APRS Appl
-void * APPLTX_Q = 0;			// Queue of frames from APRS Appl
+/*! \brief Queue of frames for APRS application */
+void *APPL_Q = 0;
+
+/*! \brief Queue of frames from APRS application */
+void *APPLTX_Q = 0;
+
 uint64_t APRSPortMask = 0;
 
 char APRSCall[10] = "";
@@ -169,22 +195,47 @@ int WXCounter = 29 * 60;
 char APRSCall[10];
 char LoppedAPRSCall[10];
 
-BOOL WXPort[MaxBPQPortNo + 1];				// Ports to send WX to
+/*! \brief Ports to send WX data to */
+BOOL WXPort[MaxBPQPortNo + 1];
 
 BOOL GPSOK = 0;
 
-char LAT[] = "0000.00N";	// in standard APRS Format      
-char LON[] = "00000.00W";	//in standard APRS Format
+/*! \brief Latitude (in standard APRS format) */
+char LAT[] = "0000.00N";
+
+/*! \brief Longitude (in standard APRS format) */
+char LON[] = "00000.00W";
+
 
 char HostName[80];			// for BlueNMEA
 int HostPort = 4352;
 
+/**
+ * \defgroup aprs_gpsd APRS GPSd
+ *
+ * @{
+ */
+
+/*! \brief The GPSd host */
 char GPSDHost[80];
+
+/**
+ * \brief The GPSd port
+ *
+ * \note The default port is \b 2947
+ */
 int GPSDPort = 2947;
 
+/**
+ * @}
+ */
 
+/*! \brief The ADSB port */
 extern int ADSBPort;
+
+/*! \brief The ADSB host */
 extern char ADSBHost[];
+
 
 BOOL BlueNMEAOK = FALSE;
 int BlueNMEATimer = 0;
@@ -192,35 +243,62 @@ int BlueNMEATimer = 0;
 BOOL GPSDOK = FALSE;
 int GPSDTimer = 0;
 
+/*! \brief Update map location from GPS */
+BOOL GPSSetsLocator = 0;
 
-BOOL GPSSetsLocator = 0;	// Update Map Location from GPS
+double SOG;
+double COG;		// From GPS
 
-double SOG, COG;		// From GPS
-
+/*! \brief Latitude */
 double Lat = 0.0;
+
+/*! \brief Longitude */
 double Lon = 0.0;
 
-BOOL PosnSet = FALSE;
-/*
-The null position should be include the \. symbol (unknown/indeterminate
-position). For example, a Position Report for a station with unknown position
-will contain the coordinates …0000.00N\00000.00W.…
-*/
-char * FloodCalls = 0;			// Calls to relay using N-n without tracing
-char * TraceCalls = 0;			// Calls to relay using N-n with tracing
-char * DigiCalls = 0;			// Calls for normal relaying
 
-UCHAR FloodAX[MAXCALLS][7] = {0};
-UCHAR TraceAX[MAXCALLS][7] = {0};
-UCHAR DigiAX[MAXCALLS][7] = {0};
+BOOL PosnSet = FALSE;
+
+/*
+ * The null position should be include the \. symbol (unknown/indeterminate position). For example, a Position Report
+ * for a station with unknown position will contain the coordinates …0000.00N\00000.00W.…
+ */
+
+/*! \brief Calls to relay using N-n without tracing */
+char *FloodCalls = 0;
+
+/*! \brief Calls to relay using N-n with tracing */
+char *TraceCalls = 0;
+
+/*! \brief Calls for normal relaying */
+char *DigiCalls = 0;
+
+UCHAR FloodAX[MAXCALLS][7] = { 0 };
+UCHAR TraceAX[MAXCALLS][7] = { 0 };
+UCHAR DigiAX[MAXCALLS][7] = { 0 };
 
 int FloodLen[MAXCALLS];
 int TraceLen[MAXCALLS];
 int DigiLen[MAXCALLS];
 
+/**
+ * \defgroup aprs_aprsis APRS -- APRS-IS
+ *
+ * @{
+ */
+
+/*! \brief The APRS-IS server port */
 int ISPort = 0;
+
+/*! \brief The APRS-IS server hostname */
 char ISHost[256] = "";
+
+/*! \brief The APRS-IS passcode */
 int ISPasscode = 0;
+
+/**
+ * @}
+ */
+
 char NodeFilter[1000] = "m/50";		// Filter when the isn't an application
 char ISFilter[1000] = "m/50";		// Current Filter
 char APPLFilter[1000] = "";			// Filter when an Applcation is running
@@ -230,15 +308,15 @@ extern BOOL IGateEnabled;
 char StatusMsg[256] = "";			// Must be in shared segment
 int StatusMsgLen = 0;
 
-char * BeaconPath[65] = {0};
+char *BeaconPath[65] = { 0 };
 
-char CrossPortMap[65][65] = {0};
-char APRSBridgeMap[65][65] = {0};
+char CrossPortMap[65][65] = { 0 };
+char APRSBridgeMap[65][65] = { 0 };
 
-UCHAR BeaconHeader[65][10][7] = {""};	//	Dest, Source and up to 8 digis 
+UCHAR BeaconHeader[65][10][7] = { "" };	// Dest, Source and up to 8 digis 
 int BeaconHddrLen[65] = {0};			// Actual Length used
 
-UCHAR GatedHeader[65][10][7] = {""};	//	Dest, Source and up to 8 digis for messages gated from IS
+UCHAR GatedHeader[65][10][7] = { "" };	// Dest, Source and up to 8 digis for messages gated from IS
 int GatedHddrLen[65] = {0};			    // Actual Length used
 
 
@@ -248,7 +326,8 @@ char CFGSYMSET = 'B';
 char SYMBOL = '=';						// Unknown Locaton
 char SYMSET = '/';
 
-char * PHG = 0;							// Optional PHG (Power-Height-Gain) string for beacon
+/*! \brief The (optional) PHG (Power/Height/Gain) string for beacon */
+char *PHG = 0;
 
 BOOL TraceDigi = FALSE;					// Add Trace to packets relayed on Digi Calls
 BOOL SATGate = FALSE;					// Delay Gating to IS directly heard packets
@@ -263,14 +342,14 @@ extern BOOL needAIS;
 
 extern unsigned long long IconData[];  // Symbols as a png image.
 
-typedef struct _ISDELAY
-{
-	struct _ISDELAY * Next;
-	char * ISMSG;
+
+typedef struct _ISDELAY {
+	struct _ISDELAY *Next;
+	char *ISMSG;
 	time_t SendTIme;
 } ISDELAY;
 
-ISDELAY * SatISQueue = NULL;
+ISDELAY *SatISQueue = NULL;
 
 int MaxTraceHops = 2;
 int MaxFloodHops = 2;
@@ -287,14 +366,42 @@ char RunProgram[128] = "";				// Program to start
 BOOL APRSISOpen = FALSE;
 BOOL BeacontoIS = TRUE;
 
-int ISDelayTimer = 0;					// Time before trying to reopen APRS-IS link
+/*! \brief Time to wait before trying to reopen the APRS-IS link */
+int ISDelayTimer = 0;
 
-char APRSDESTS[][7] = {"AIR*", "ALL*", "AP*", "BEACON", "CQ*", "GPS*", "DF*", "DGPS*", "DRILL*",
-				"DX*", "ID*", "JAVA*", "MAIL*", "MICE*", "QST*", "QTH*", "RTCM*", "SKY*",
-				"SPACE*", "SPC*", "SYM*", "TEL*", "TEST*", "TLM*", "WX*", "ZIP"};
 
-UCHAR AXDESTS[30][7] = {""};
-int AXDESTLEN[30] = {0};
+/*! \brief All of the valid APRS destinations */
+char APRSDESTS[][7] = {
+	"AIR*",
+	"ALL*",
+	"AP*",
+	"BEACON",
+	"CQ*",
+	"GPS*",
+	"DF*",
+	"DGPS*",
+	"DRILL*",
+	"DX*",
+	"ID*",
+	"JAVA*",
+	"MAIL*",
+	"MICE*",
+	"QST*",
+	"QTH*",
+	"RTCM*",
+	"SKY*",
+	"SPACE*",
+	"SPC*",
+	"SYM*",
+	"TEL*",
+	"TEST*",
+	"TLM*",
+	"WX*",
+	"ZIP"
+};
+
+UCHAR AXDESTS[30][7] = { "" };
+int AXDESTLEN[30] = { 0 };
 
 UCHAR axTCPIP[7];
 UCHAR axRFONLY[7];
@@ -302,13 +409,13 @@ UCHAR axNOGATE[7];
 
 int MessageCount = 0;
 
-struct PortInfo
-{ 
+/*! \brief Structure describing an APRS port information */
+struct PortInfo { 
 	int Index;
 	int ComPort;
 	char PortType[2];
-	BOOL NewVCOM;				// Using User Mode Virtual COM Driver
-	int ReopenTimer;			// Retry if open failed delay
+	BOOL NewVCOM;					// Using User Mode Virtual COM Driver
+	int ReopenTimer;				// Retry if open failed delay
 	int RTS;
 	int CTS;
 	int DCD;
@@ -326,13 +433,14 @@ struct PortInfo
 	OVERLAPPED OverlappedRead;
 #endif
 	char GPSinMsg[160];
-	int GPSTypeFlag;					// GPS Source flags
-	BOOL RMCOnly;						// Only send RMC msgs to this port
+	int GPSTypeFlag;				// GPS Source flags
+	BOOL RMCOnly;					// Only send RMC msgs to this port
 };
 
 
 
-struct PortInfo InPorts[1] = {0};
+struct PortInfo InPorts[1] = { 0 };
+
 
 // Heard Station info
 
@@ -342,33 +450,34 @@ int HEARDENTRIES = 0;
 int MAXHEARDENTRIES = 0;
 int MHLEN = sizeof(APRSHEARDRECORD);
 
+
 // Area is allocated as needed
 
-APRSHEARDRECORD MHTABLE[MAXHEARD] = {0};
+APRSHEARDRECORD MHTABLE[MAXHEARD] = { 0 };
 
-APRSHEARDRECORD * MHDATA = &MHTABLE[0];
+APRSHEARDRECORD *MHDATA = &MHTABLE[0];
 
 static SOCKET sock = 0;
 
-//Duplicate suppression Code
+
+// Duplicate suppression Code
 
 #define MAXDUPS 100			// Number to keep
 #define DUPSECONDS 28		// Time to Keep
 
-struct DUPINFO
-{
+struct DUPINFO {
 	time_t DupTime;
 	int DupLen;
-	char  DupUser[8];		// Call in ax.35 format
-	char  DupText[100];
+	char DupUser[8];		// Call in ax.25 format
+	char DupText[100];
 };
 
 struct DUPINFO DupInfo[MAXDUPS];
 
-struct OBJECT
-{
-	struct OBJECT * Next;
-	UCHAR Path[10][7];		//	Dest, Source and up to 8 digis 
+/*! \brief Structure describing an object */
+struct OBJECT {
+	struct OBJECT *Next;
+	UCHAR Path[10][7];		// Dest, Source and up to 8 digis 
 	int PathLen;			// Actual Length used
 	char Message[81];
 	char PortMap[MaxBPQPortNo + 1];
@@ -376,13 +485,17 @@ struct OBJECT
 	int Timer;
 };
 
-struct OBJECT * ObjectList;		// List of objects to send;
+/*! \brief List of objects to send */
+struct OBJECT *ObjectList;
 
 int ObjectCount = 0;
 
+
 #include <math.h>
 
-#define M_PI       3.14159265358979323846
+#if !defined(M_PI)
+#define M_PI 3.14159265358979323846
+#endif
 
 int RetryCount = 4;
 int RetryTimer = 45;
@@ -422,17 +535,17 @@ UCHAR NextSeq = 1;
 
 //	A pointer to the first is placed at the start of this
 
-struct STATIONRECORD ** StationRecords = NULL;
-struct STATIONRECORD * StationRecordPool = NULL;
-struct APRSMESSAGE * MessageRecordPool = NULL;
+struct STATIONRECORD **StationRecords = NULL;
+struct STATIONRECORD *StationRecordPool = NULL;
+struct APRSMESSAGE *MessageRecordPool = NULL;
 
-struct SharedMem * SMEM;
+struct SharedMem *SMEM;
 
-UCHAR * Shared;
-UCHAR * StnRecordBase;
+UCHAR *Shared;
+UCHAR *StnRecordBase;
 
-VOID SendObject(struct OBJECT * Object);
-VOID MonitorAPRSIS(char * Msg, int MsgLen, BOOL TX);
+VOID SendObject(struct OBJECT *Object);
+VOID MonitorAPRSIS(char *Msg, int MsgLen, BOOL TX);
 
 #ifndef WIN32
 #define WSAEWOULDBLOCK 11
@@ -442,12 +555,12 @@ HANDLE hMapFile;
 
 // Logging
 
-int APRSWriteLog(char * msg)
+int APRSWriteLog(char *msg)
 {
 	FILE *file;
 	UCHAR Value[MAX_PATH];
 	time_t T;
-	struct tm * tm;
+	struct tm *tm;
 	int n;
 
 
@@ -484,7 +597,7 @@ int APRSWriteLog(char * msg)
 }
 
 
-int ISSend(SOCKET sock, char * Msg, int Len, int flags)
+int ISSend(SOCKET sock, char *Msg, int Len, int flags)
 {
 	int Loops = 0;
 	int Sent;
@@ -511,12 +624,12 @@ int ISSend(SOCKET sock, char * Msg, int Len, int flags)
 	return Sent;
 }
 
-void * endofStations;
+void *endofStations;
 
 Dll BOOL APIENTRY Init_APRS()
 {
 	int i;
-	char * DCall;
+	char *DCall;
 
 #ifdef WIN32
 	HKEY hKey=0;
@@ -526,10 +639,10 @@ Dll BOOL APIENTRY Init_APRS()
 	char RX_SOCK_PATH[] = "BPQAPRSrxsock";
 	char TX_SOCK_PATH[] = "BPQAPRStxsock";
 	char SharedName[256];
-	char * ptr1;
+	char *ptr1;
 #endif
-	struct STATIONRECORD * Stn1, * Stn2;
-	struct APRSMESSAGE * Msg1, * Msg2;
+	struct STATIONRECORD *Stn1, *Stn2;
+	struct APRSMESSAGE *Msg1, *Msg2;
 
 	// Clear tables in case a restart
 
@@ -882,7 +995,7 @@ Dll BOOL APIENTRY Init_APRS()
 
 	#ifndef WIN32
 	{
-		char * arg_list[] = {NULL, NULL};
+		char *arg_list[] = {NULL, NULL};
 		pid_t child_pid;	
 
 		signal(SIGCHLD, SIG_IGN); // Silently (and portably) reap children. 
@@ -988,7 +1101,7 @@ Dll VOID APIENTRY Poll_APRS()
 	{
 		// Clear Received Messages request from GUI
 
-		struct APRSMESSAGE * ptr = SMEM->Messages;
+		struct APRSMESSAGE *ptr = SMEM->Messages;
 
 		// Move Message Queue to Free Queue
 
@@ -1018,7 +1131,7 @@ Dll VOID APIENTRY Poll_APRS()
 	{
 		// Clear Sent Messages )request from GUI
 
-		struct APRSMESSAGE * ptr = SMEM->OutstandingMsgs;
+		struct APRSMESSAGE *ptr = SMEM->OutstandingMsgs;
 
 		// Move Message Queue to Free Queue
 
@@ -1076,26 +1189,26 @@ Dll VOID APIENTRY Poll_APRS()
 		int len;
 		BOOL MonitorNODES = FALSE;
 		PMESSAGE monbuff;
-		UCHAR * monchars;
-		MESSAGE * Orig;
+		UCHAR *monchars;
+		MESSAGE *Orig;
 		int Digis = 0;
-		MESSAGE * AdjBuff;		// Adjusted for digis
+		MESSAGE *AdjBuff;		// Adjusted for digis
 		BOOL FirstUnused = FALSE;
 		int DigisUsed = 0;		// Digis used to reach us
 		DIGIMESSAGE Msg = {0};
 		int Port;
 		unsigned char buffer[1024];
 		char ISMsg[500];
-		char * ptr1;
-		char * Payload;
-		char * ptr3;
-		char * ptr4;
+		char *ptr1;
+		char *Payload;
+		char *ptr3;
+		char *ptr4;
 		BOOL ThirdParty = FALSE;
 		BOOL NoGate = FALSE;
-		APRSHEARDRECORD * MH;
+		APRSHEARDRECORD *MH;
 		char MsgCopy[500];
 		int toPort;
-		struct STATIONRECORD * Station;
+		struct STATIONRECORD *Station;
 		int ourMessage = 0;
 	
 #ifdef WIN32
@@ -1141,7 +1254,7 @@ Dll VOID APIENTRY Poll_APRS()
 
 		while ((AdjBuff->ORIGIN[6] & 1) == 0 && Digis < 9)
 		{
-			UCHAR * temp = (UCHAR *)AdjBuff;
+			UCHAR *temp = (UCHAR *)AdjBuff;
 			temp += 7;
 			AdjBuff = (MESSAGE *)temp;
 
@@ -1202,8 +1315,8 @@ Dll VOID APIENTRY Poll_APRS()
 		{
 			if (APRSBridgeMap[Port][toPort])
 			{
-				MESSAGE * Buffer = GetBuff();
-				struct PORTCONTROL * PORT;
+				MESSAGE *Buffer = GetBuff();
+				struct PORTCONTROL *PORT;
 
 				if (Buffer)
 				{
@@ -1388,7 +1501,7 @@ Dll VOID APIENTRY Poll_APRS()
 			{
 				// If in Satgate mode delay directly heard to IGate
 
-				ISDELAY * SatISEntry = malloc(sizeof(ISDELAY));
+				ISDELAY *SatISEntry = malloc(sizeof(ISDELAY));
 				SatISEntry->Next =	NULL;
 				SatISEntry->ISMSG = _strdup(ISMsg);
 				SatISEntry->SendTIme = NOW + 10;	// Delay 10 seconds
@@ -1498,10 +1611,10 @@ OK:
 	return;
 }
 
-VOID CheckandDigi(DIGIMESSAGE * Msg, int Port, int FirstUnused, int Digis, int Len)
+VOID CheckandDigi(DIGIMESSAGE *Msg, int Port, int FirstUnused, int Digis, int Len)
 {
-	UCHAR * Digi = &Msg->DIGIS[--FirstUnused][0];
-	UCHAR * Call;
+	UCHAR *Digi = &Msg->DIGIS[--FirstUnused][0];
+	UCHAR *Call;
 	int Index = 0;
 	int SSID;
 
@@ -1575,12 +1688,9 @@ VOID CheckandDigi(DIGIMESSAGE * Msg, int Port, int FirstUnused, int Digis, int L
 	Index = 0;
 	Call = &FloodAX[0][0];
 
-	while (*Call)
-	{
-		if (memcmp(Digi, Call, FloodLen[Index]) == 0)
-		{
+	while (*Call) {
+		if (memcmp(Digi, Call, FloodLen[Index]) == 0) {
 			// decrement ssid, and if zero, mark as used;
-
 			SSID = (Digi[6] & 0x1E) >> 1;
 
 			if (SSID == 0)	

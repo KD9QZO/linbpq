@@ -54,24 +54,24 @@ extern HKEY REGTREE;
 extern int Ver[];
 
 
-int KillTNC(struct TNCINFO * TNC);
-int RestartTNC(struct TNCINFO * TNC);
+int KillTNC(struct TNCINFO *TNC);
+int RestartTNC(struct TNCINFO *TNC);
 
-char * GetChallengeResponse(char * Call, char *  ChallengeString);
+char *GetChallengeResponse(char *Call, char *ChallengeString);
 
-VOID __cdecl Debugprintf(const char * format, ...);
-int FromLOC(char * Locator, double * pLat, double * pLon);
-BOOL ToLOC(double Lat, double Lon , char * Locator);
+VOID __cdecl Debugprintf(const char *format, ...);
+int FromLOC(char *Locator, double *pLat, double *pLon);
+BOOL ToLOC(double Lat, double Lon, char *Locator);
 
-int GetPosnFromAPRS(char * Call, double * Lat, double * Lon);
-char * stristr (char *ch1, char *ch2);
+int GetPosnFromAPRS(char *Call, double *Lat, double *Lon);
+char *stristr(char *ch1, char *ch2);
 
 
 static RECT Rect;
 
-#define WSA_ACCEPT WM_USER + 1
-#define WSA_DATA WM_USER + 2
-#define WSA_CONNECT WM_USER + 3
+#define WSA_ACCEPT		WM_USER + 1
+#define WSA_DATA		WM_USER + 2
+#define WSA_CONNECT		WM_USER + 3
 
 int Winmor_Socket_Data(int sock, int error, int eventcode);
 
@@ -79,9 +79,11 @@ struct WL2KInfo * WL2KReports;
 
 int WL2KTimer = 0;
 
-int ModetoBaud[31] = {0,0,0,0,0,0,0,0,0,0,0,			// 0 = 10
-					  200,600,3200,600,3200,3200,		// 11 - 16
-					  0,0,0,0,0,0,0,0,0,0,0,0,0,600};	// 17 - 30
+int ModetoBaud[31] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,			// 0 = 10
+	200, 600, 3200, 600, 3200, 3200,			// 11 - 16
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 600	// 17 - 30
+};
 
 extern char HFCTEXT[];
 extern int HFCTEXTLEN;
@@ -91,13 +93,12 @@ extern char WL2KCall[10];
 extern char WL2KLoc[7];
 
 
-VOID MoveWindows(struct TNCINFO * TNC)
-{
+VOID MoveWindows(struct TNCINFO *TNC) {
 #ifndef LINBPQ
 	RECT rcClient;
 	int ClientHeight, ClientWidth;
 
-	GetClientRect(TNC->hDlg, &rcClient); 
+	GetClientRect(TNC->hDlg, &rcClient);
 
 	ClientHeight = rcClient.bottom;
 	ClientWidth = rcClient.right;
@@ -107,13 +108,13 @@ VOID MoveWindows(struct TNCINFO * TNC)
 #endif
 }
 
-char * Config;
-static char * ptr1, * ptr2;
+char *Config;
+static char *ptr1;
+static char *ptr2;
 
 #ifndef LINBPQ
 
-LRESULT CALLBACK PacWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+LRESULT CALLBACK PacWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	int wmId, wmEvent;
 	MINMAXINFO * mmi;
 
@@ -124,12 +125,11 @@ LRESULT CALLBACK PacWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	char Key[80];
 	int retCode, disp;
 
-	for (i=0; i<41; i++)
-	{
+	for (i = 0; i < 41; i++) {
 		TNC = TNCInfo[i];
 		if (TNC == NULL)
 			continue;
-		
+
 		if (TNC->hDlg == hWnd)
 			break;
 	}
@@ -137,92 +137,64 @@ LRESULT CALLBACK PacWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	if (TNC == NULL)
 			return DefMDIChildProc(hWnd, message, wParam, lParam);
 
-	switch (message) { 
+	switch (message) {
+		case WM_CREATE:
+			break;
 
-	case WM_CREATE:
-
-		break;
-
-	case WM_PAINT:
-
+		case WM_PAINT:
 //			hdc = BeginPaint (hWnd, &ps);
-			
 //			SelectObject( hdc, hFont) ;
-			
 //			EndPaint (hWnd, &ps);
 //
 //			wParam = hdc;
-	
-			break;        
+			break;
 
-
-	case WM_GETMINMAXINFO:
-
- 		if (TNC->ClientHeight)
-		{
-			mmi = (MINMAXINFO *)lParam;
-			mmi->ptMaxSize.x = TNC->ClientWidth;
-			mmi->ptMaxSize.y = TNC->ClientHeight;
-			mmi->ptMaxTrackSize.x = TNC->ClientWidth;
-			mmi->ptMaxTrackSize.y = TNC->ClientHeight;
-		}
-
-		break;
-
-
-	case WM_MDIACTIVATE:
-	{
-			 
-		// Set the system info menu when getting activated
-			 
-		if (lParam == (LPARAM) hWnd)
-		{
-			// Activate
-
-			RemoveMenu(hBaseMenu, 1, MF_BYPOSITION);
-
-			if (TNC->hMenu)
-				AppendMenu(hBaseMenu, MF_STRING + MF_POPUP, (UINT)TNC->hMenu, "Actions");
-			
-			SendMessage(ClientWnd, WM_MDISETMENU, (WPARAM) hBaseMenu, (LPARAM) hWndMenu);
-
-//			SendMessage(ClientWnd, WM_MDISETMENU, (WPARAM) TNC->hMenu, (LPARAM) TNC->hWndMenu);
-		}
-		else
-		{
-			 // Deactivate
-	
-			SendMessage(ClientWnd, WM_MDISETMENU, (WPARAM) hMainFrameMenu, (LPARAM) NULL);
-		 }
-			 
-		// call DrawMenuBar after the menu items are set
-		DrawMenuBar(FrameWnd);
-
-		return DefMDIChildProc(hWnd, message, wParam, lParam);
-	}
-
-
-
-	case WM_INITMENUPOPUP:
-
-		if (wParam == (WPARAM)TNC->hMenu)
-		{
-			if (TNC->ProgramPath)
-			{
-				if (strstr(TNC->ProgramPath, " TNC") || strstr(TNC->ProgramPath, "ARDOP")
-					 || strstr(TNC->ProgramPath, "VARA") || stristr(TNC->ProgramPath, "FREEDATA"))
-				{
-					EnableMenuItem(TNC->hMenu, WINMOR_RESTART, MF_BYCOMMAND | MF_ENABLED);
-					EnableMenuItem(TNC->hMenu, WINMOR_KILL, MF_BYCOMMAND | MF_ENABLED);
-		
-					break;
-				}
+		case WM_GETMINMAXINFO:
+	 		if (TNC->ClientHeight) {
+				mmi = (MINMAXINFO *)lParam;
+				mmi->ptMaxSize.x = TNC->ClientWidth;
+				mmi->ptMaxSize.y = TNC->ClientHeight;
+				mmi->ptMaxTrackSize.x = TNC->ClientWidth;
+				mmi->ptMaxTrackSize.y = TNC->ClientHeight;
 			}
-			EnableMenuItem(TNC->hMenu, WINMOR_RESTART, MF_BYCOMMAND | MF_GRAYED);
-			EnableMenuItem(TNC->hMenu, WINMOR_KILL, MF_BYCOMMAND | MF_GRAYED);
+			break;
+
+		case WM_MDIACTIVATE: {
+			// Set the system info menu when getting activated
+			if (lParam == (LPARAM)hWnd) {
+				// Activate
+				RemoveMenu(hBaseMenu, 1, MF_BYPOSITION);
+
+				if (TNC->hMenu)
+					AppendMenu(hBaseMenu, MF_STRING + MF_POPUP, (UINT)TNC->hMenu, "Actions");
+
+				SendMessage(ClientWnd, WM_MDISETMENU, (WPARAM) hBaseMenu, (LPARAM) hWndMenu);
+//				SendMessage(ClientWnd, WM_MDISETMENU, (WPARAM) TNC->hMenu, (LPARAM) TNC->hWndMenu);
+			} else {
+				// Deactivate
+				SendMessage(ClientWnd, WM_MDISETMENU, (WPARAM) hMainFrameMenu, (LPARAM) NULL);
+			 }
+
+			// call DrawMenuBar after the menu items are set
+			DrawMenuBar(FrameWnd);
+
+			return DefMDIChildProc(hWnd, message, wParam, lParam);
 		}
-			
-		break;
+
+		case WM_INITMENUPOPUP:
+			if (wParam == (WPARAM)TNC->hMenu) {
+				if (TNC->ProgramPath) {
+					if (strstr(TNC->ProgramPath, " TNC") || strstr(TNC->ProgramPath, "ARDOP")
+							|| strstr(TNC->ProgramPath, "VARA") || stristr(TNC->ProgramPath, "FREEDATA")) {
+						EnableMenuItem(TNC->hMenu, WINMOR_RESTART, MF_BYCOMMAND | MF_ENABLED);
+						EnableMenuItem(TNC->hMenu, WINMOR_KILL, MF_BYCOMMAND | MF_ENABLED);
+						break;
+					}
+				}
+				EnableMenuItem(TNC->hMenu, WINMOR_RESTART, MF_BYCOMMAND | MF_GRAYED);
+				EnableMenuItem(TNC->hMenu, WINMOR_KILL, MF_BYCOMMAND | MF_GRAYED);
+			}
+			break;
 
 	case WM_COMMAND:
 
@@ -2194,5 +2166,3 @@ void sendFreqReport(char * From)
 
 	SendReportMsg((char *)&AXMSG.DEST, Len + 16) ;
 }
-
-

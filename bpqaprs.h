@@ -1,6 +1,17 @@
+/**
+ * \file bpqaprs.h
+ * \brief Definitions for APRS on BPQ
+ */
 
 #ifndef BPQAPRS_H_
 #define BPQAPRS_H_
+
+
+/**
+ * \defgroup bpq_aprs APRS
+ *
+ * @{
+ */
 
 
 #define OurSetItemText(hwndLV, i, iSubItem_, pszText_)																\
@@ -18,30 +29,33 @@ struct SORTLIST {
 	struct STATIONRECORD *Rec;
 } SortList;
 
+/**
+ * \brief Structure defining the record of an APRS station
+ */
 struct STATIONRECORD {
 	struct STATIONRECORD *Next;
-	char Callsign[12];
+	char Callsign[12];				/*!< The callsign of the APRS station */
 	char Path[120];
 	char Status[256];
-	char LastPacket[392];		// Was 400. 8 bytes used for Approx Location Flag and Qt Icon pointer
+	char LastPacket[392];			// Was 400. 8 bytes used for Approx Location Flag and Qt Icon pointer
 	char Approx;
 	char spare1;
 	char spare2;
 	char spare3;
-	void *image;				// used in QtBPQAPRS 
+	void *image;					// used in QtBPQAPRS 
 	char LastWXPacket[256];
 	int LastPort;
-	double Lat;
-	double Lon;
-	double Course;
-	double Speed;
-	double Heading;
+	double Lat;						/*!< The latitude of the APRS station */
+	double Lon;						/*!< The longitude of the APRS station */
+	double Course;					/*!< The course of the APRS station */
+	double Speed;					/*!< The speed of the APRS station */
+	double Heading;					/*!< The heading of the APRS station */
 	double LatIncr;
 	double LongIncr;
 	double LastCourse;
 	double LastSpeed;
-	double Distance;
-	double Bearing;
+	double Distance;				/*!< The distance to the APRS station */
+	double Bearing;					/*!< The bearing (direction) to the APRS station */
 	double LatTrack[TRACKPOINTS];	// Cyclic Tracklog
 	double LonTrack[TRACKPOINTS];
 	time_t TrackTime[TRACKPOINTS];
@@ -79,19 +93,20 @@ typedef struct _APRSHEARDRECORD {
 
 struct OSMQUEUE {
 	struct OSMQUEUE *Next;
-	int	Zoom;
+	int Zoom;
 	int x;
 	int y;
 };
 
+/*! \brief Structure defining an APRS message */
 struct APRSMESSAGE {
 	struct APRSMESSAGE *Next;
 	struct STATIONRECORD *ToStation;	// Set on messages we send
-	char FromCall[12];
-	char ToCall[12];
-	char Text[104];
+	char FromCall[12];					/*!< The callsign of the APRS station that sent the message */
+	char ToCall[12];					/*!< The callsign of the APRS station that is to receive the message */
+	char Text[104];						/*!< The text of the message */
 	char Seq[8];
-	BOOL Acked;
+	BOOL Acked;							/*!< Whether the message has been acknowledged (or not) */
 	int Retries;
 	int RetryTimer;
 	int Port;
@@ -116,18 +131,25 @@ struct APRSConnectionInfo {			// Used for Web Server for thread-specific stuff
 };
 
 // This defines the layout of the first few bytes of shared memory to simplify access from both node and GUI application
+
+/**
+ * \brief Shared memory layout, simplifying access from both the node and the GUI application
+ *
+ * This defines the layout of the first few bytes of shared memory to simplify access from both the node and the GUI
+ * application.
+ *
+ * \note This is a maximum of <b>32 bytes</b> unless the code is changed.
+ * \attention Don't change existing items without changing \p Version and clients.
+ */
 struct SharedMem {
-	// Max 32 bytes unless code is changed. Also don't change existing items without changing version and clients
 	UCHAR Version;				// For compatibility check
 	UCHAR NeedRefresh;			// Messages Have Changed
 	UCHAR ClearRX;
 	UCHAR ClearTX;
-	int SharedMemLen;			// So Client knows size to map
-
-	struct APRSMESSAGE *Messages;
-	struct APRSMESSAGE *OutstandingMsgs;
-
-	int Arch;					 // to detect running on 64 bit system.
+	int SharedMemLen;						/*!< The length of the shared memory, so the client knows the size to map */		// So Client knows size to map
+	struct APRSMESSAGE *Messages;			/*!< Pointer to the APRS messages */
+	struct APRSMESSAGE *OutstandingMsgs;	/*!< Pointer to the outstanding APRS messages */
+	int Arch;					 			/*!< Used to detect whether we are running on a 64 bit system */					// to detect running on 64 bit system.
 #pragma pack(1)
 	UCHAR SubVersion;
 #pragma pack()
@@ -146,9 +168,28 @@ struct SharedMem {
 
 #define APRSSHAREDMEMORYBASE 0x43000000		// Base of shared memory segment
 
-#define MAXSTATIONS 5000
-#define MAXMESSAGES 1000
 
+#if (!defined(MAXSTATIONS) || defined(__DOXYGEN__))
+/**
+ * \brief Defines the maximum number of APRS stations
+ *
+ * \note The default is \b 5000
+ */
+#define MAXSTATIONS 5000
+#endif
+
+#if (!defined(MAXMESSAGES) || defined(__DOXYGEN__))
+/**
+ * \brief Defines the maximum number of APRS messages
+ *
+ * \note The default is \b 1000
+ */
+#define MAXMESSAGES 1000
+#endif
+
+/**
+ * @}
+ */
 
 #endif	/* !BPQAPRS_H_ */
 

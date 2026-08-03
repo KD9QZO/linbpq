@@ -12,14 +12,22 @@
 
 #pragma comment(lib, "winmm.lib")
 
-WAVEFORMATEX wfx = { WAVE_FORMAT_PCM, 1, 12000, 24000, 2, 16, 0 };
+WAVEFORMATEX wfx = {
+	WAVE_FORMAT_PCM,
+	1,
+	12000,
+	24000,
+	2,
+	16,
+	0
+};
 
 WAVEOUTCAPS pwoc;
 WAVEINCAPS pwic;
 
 
-char * CaptureDevices = NULL;
-char * PlaybackDevices = NULL;
+char *CaptureDevices = NULL;
+char *PlaybackDevices = NULL;
 
 int CaptureCount = 0;
 int PlaybackCount = 0;
@@ -38,11 +46,10 @@ HWAVEIN hWaveIn = 0;
 char CaptureNames[16][MAXPNAMELEN + 2] = { "" };
 char PlaybackNames[16][MAXPNAMELEN + 2] = { "" };
 
-char * strlop(char * buf, char delim)
-{
-	// Terminate buf at delim, and return rest of string
 
-	char * ptr;
+char *strlop(char *buf, char delim) {
+	// Terminate buf at delim, and return rest of string
+	char *ptr;
 
 	if (buf == NULL) return NULL;		// Protect
 
@@ -56,16 +63,13 @@ char * strlop(char * buf, char delim)
 }
 
 
-void main(int argc, char * argv[])
-{
+void main(int argc, char *argv[]) {
 	int i;
 	FILE *infile;
 	FILE *file;
-
 	char line[1024] = "";
 	char index[64];
-	char * ptr;
-
+	char *ptr;
 
 	PlaybackCount = waveOutGetNumDevs();
 
@@ -74,8 +78,7 @@ void main(int argc, char * argv[])
 
 	printf("Playback Devices\r\n");
 
-	for (i = 0; i < PlaybackCount; i++)
-	{
+	for (i = 0; i < PlaybackCount; i++) {
 		waveOutOpen(&hWaveOut, i, &wfx, 0, 0, CALLBACK_NULL); //WAVE_MAPPER
 		waveOutGetDevCaps((UINT_PTR)hWaveOut, &pwoc, sizeof(WAVEOUTCAPS));
 
@@ -185,13 +188,9 @@ void main(int argc, char * argv[])
 		fprintf(file, line);
 	}
 
-
 	fclose(file);
 	fclose(infile);
 
 	printf("File updated");
-
-
-
 }
 

@@ -1,6 +1,10 @@
 //
 // Common definitons for Pactor-like Modules
 
+#ifndef TNCINFO_H_
+#define TNCINFO_H_
+
+
 #include "kernelresource.h"
 
 #include "rigcontrol.h"
@@ -8,6 +12,7 @@
 #define MAXBLOCK 4096
 
 #define MAXFREQS 20			// RigControl freqs to scan
+
 
 extern char HFCTEXT[81];
 extern int HFCTEXTLEN;
@@ -18,15 +23,14 @@ extern HMENU hMainFrameMenu;
 extern HMENU hWndMenu;
 
 
-void BuildDevicePage(struct TNCINFO * TNC);
+void BuildDevicePage(struct TNCINFO *TNC);
 
 
-/*
-struct WL2KInfo
-{
-	struct WL2KInfo * Next;
+#if 0
+struct WL2KInfo {
+	struct WL2KInfo *Next;
 
-	char * Host;
+	char *Host;
 	short WL2KPort;
 
 	char RMSCall[10];
@@ -48,23 +52,20 @@ struct WL2KInfo
 
 	int Freq;
 	char Bandwidth;
-//	char * TimeList;		// eg 06-10,12-15
-	int mode;              // see below (an integer)
-	int baud;              // see below (an integer)
-	int power;             // actual power if known, default to 100 for HF, 30 for VHF/UHF (an integer)
-	int height;            // antenna height in feet if known, default to 25
-	int gain;              // antenna gain if known, default to 0
-	int direction;         // primary antenna direction in degrees if known, use 000 for omni (an integer)
+//	char *TimeList;			// eg 06-10,12-15
+	int mode;				// see below (an integer)
+	int baud;				// see below (an integer)
+	int power;				// actual power if known, default to 100 for HF, 30 for VHF/UHF (an integer)
+	int height;				// antenna height in feet if known, default to 25
+	int gain;				// antenna gain if known, default to 0
+	int direction;			// primary antenna direction in degrees if known, use 000 for omni (an integer)
 	BOOL RPonPTC;			// Set if scanning for Robust Packet on a PTC
 };
+#endif
 
-*/
 #pragma pack(1)
-
-// AGWPE Header Structure
-
-struct AGWHEADER
-{
+/*! \brief AGWPE Header Structure */
+struct AGWHEADER {
 	UCHAR Port;
 	UCHAR filler1[3];
 	char DataKind;
@@ -76,23 +77,19 @@ struct AGWHEADER
 	int DataLength;
 	int reserved;
 };
-
 #pragma pack()
 
-// Telnet Server User Record
-
-struct UserRec
-{
-	char * Callsign;
-	char * UserName;
-	char * Password;
-	char * Appl;				// Autoconnect APPL
-	BOOL Secure;				// Authorised User
+/*! \brief Telnet Server User Record */
+struct UserRec {
+	char *Callsign;
+	char *UserName;
+	char *Password;
+	char *Appl;					/*!< Autoconnect APPL */
+	BOOL Secure;				/*!< Authorised User */
 };
 
-struct LOCALNET 
-{
-	struct LOCALNET * Next;
+struct LOCALNET {
+	struct LOCALNET *Next;
 	uint32_t Network;
 	uint32_t Mask;
 };
@@ -100,10 +97,9 @@ struct LOCALNET
 
 #define MaxCMS	10				// Number of addresses we can keep - currently 4 are used.
 
-struct TCPINFO
-{
+struct TCPINFO {
 	int NumberofUsers;
-	struct UserRec ** UserRecPtr;
+	struct UserRec **UserRecPtr;
 	int CurrentConnections;
 
 	struct UserRec RelayUser;
@@ -132,7 +128,7 @@ struct TCPINFO
 	BOOL UseCachedCMSAddrs;
 	struct in_addr CMSAddr[MaxCMS];
 	BOOL CMSFailed[MaxCMS];		// Set if connect to CMS failed.
-	char * CMSName[MaxCMS];		// Reverse DNS Name of Server
+	char *CMSName[MaxCMS];		// Reverse DNS Name of Server
 	int NumberofCMSAddrs;
 	int NextCMSAddr;			// Round Robin Pointer
 	int CheckCMSTimer;			// CMS Poll Timer
@@ -141,9 +137,9 @@ struct TCPINFO
 	char GatewayCall[10];		// Call for CMS access
 	char GatewayLoc[10];		// Loc - Needed to report Hybrid Mode
 	int ReportHybrid;			// Report as Hybrod Station
-	char * HybridServiceCode;
-	char * HybridFrequencies;
-	char * HybridCoLocatedRMS;
+	char *HybridServiceCode;
+	char *HybridFrequencies;
+	char *HybridCoLocatedRMS;
 
 	BOOL DisconnectOnClose;
 
@@ -174,7 +170,7 @@ struct TCPINFO
 	SOCKET SNMPsock;
 	SOCKET NETROMSock;
 
-	struct ConnectionInfo * TriModeControlSession;
+	struct ConnectionInfo *TriModeControlSession;
 	SOCKET sock6;
 	SOCKET FBBsock6[100];
 	SOCKET Relaysock6;
@@ -195,22 +191,20 @@ struct TCPINFO
 	int SecureTelnet;
 	int ReportRelayTraffic;			// Send WL2K Reports for Relay Traffic
 
-	char * WebTermCSS;				// css override for web terminal
-	struct LOCALNET * LocalNets;
-
+	char *WebTermCSS;				// css override for web terminal
+	struct LOCALNET *LocalNets;
 };
 
 
-struct STREAMINFO
-{
-//	TRANSPORTENTRY * AttachedSession;
+struct STREAMINFO {
+//	TRANSPORTENTRY *AttachedSession;
 
-	void * PACTORtoBPQ_Q;		// Frames for BPQ
-	void * BPQtoPACTOR_Q;		// Frames for PACTOR
-	int	FramesOutstanding;		// Frames Queued - used for flow control
-	int	FramesQueued;			// Frames Queued - used for flow control
+	void *PACTORtoBPQ_Q;		// Frames for BPQ
+	void *BPQtoPACTOR_Q;		// Frames for PACTOR
+	int FramesOutstanding;		// Frames Queued - used for flow control
+	int FramesQueued;			// Frames Queued - used for flow control
 	BOOL InternalCmd;			// Last Command was generated internally
-	int	IntCmdDelay;			// To limit internal commands
+	int IntCmdDelay;			// To limit internal commands
 	BOOL CheckingCall;			// Set on PTC if waiting for I response after a Connect RXed
 
 	BOOL Attached;				// Set what attached to a BPQ32 stream
@@ -233,8 +227,6 @@ struct STREAMINFO
 	char receivingCall[10];		// for reporting. Link and Our calls depand on which end connected
 	char Direction[4];			// In or Out
 
-
-
 	char AGWKey[21];			// Session Key for AGW Session Based Drivers
 
 	time_t ConnectTime;			// Time connection made
@@ -252,16 +244,16 @@ struct STREAMINFO
 	UCHAR PTCStatus2;			// Status Bytes
 	UCHAR PTCStatus3;			// Status Bytes
 
-	char * CmdSet;				// A series of commands to send to the TNC
-	char * CmdSave;				// Base address for free
+	char *CmdSet;				// A series of commands to send to the TNC
+	char *CmdSave;				// Base address for free
 
-	struct ConnectionInfo * ConnectionInfo;	// TCP Server Connection Info
+	struct ConnectionInfo *ConnectionInfo;	// TCP Server Connection Info
 
 	int TimeInRX;				// Too long in send mode timer
 	int NeedDisc;				// Timer to send DISC if appl not available
 
 	BOOL NoCMSFallback;			// Dont use relay if CMS not available
-	struct ARQINFO * ARQInfo;	// FLDIGI/FLARQ Stream Mode Specific Data
+	struct ARQINFO *ARQInfo;	// FLDIGI/FLARQ Stream Mode Specific Data
 
 	HWND xIDC_MYCALL; 
 	HWND xIDC_DESTCALL;
@@ -276,10 +268,8 @@ struct STREAMINFO
 	int VaraACMode;
 };
 
-typedef struct AGWINFO
-{
+typedef struct AGWINFO {
 	// Fields for AGW Session based Ports (eg UZ7HO Modem)
-
 	struct AGWHEADER TXHeader;
 	struct AGWHEADER RXHeader;
 	int MaxSessions;
@@ -288,9 +278,7 @@ typedef struct AGWINFO
 	time_t LastParamTime;
 
 #ifdef WIN32
-
 	// For selecting UZ7HO Mode and Freq
-
 	COMBOBOXINFO cbinfo;		// UZ7HO Modem Combo Box info
 	HWND hFreq;					// UZ7HO Frequency Box
 	HWND hSpin;					// UZ7HO Spin Button
@@ -309,12 +297,9 @@ typedef struct AGWINFO
 
 } *PAGWINFO;
 
-typedef struct ARQINFO
-{
+typedef struct ARQINFO {
 	// Fields for FLDIGI/FLARQ Ports
-
 	// Max window is 64, though often will use less
-
 	char OurStream;
 	char FarStream;
 
@@ -337,15 +322,15 @@ typedef struct ARQINFO
 	int ARQTimer;
 	int ARQState;
 
-#define ARQ_ACTIVE 1				// Have a session of some type
+#define ARQ_ACTIVE		1				// Have a session of some type
 
 	int ARQTimerState;
 
-#define ARQ_CONNECTING 1
-#define ARQ_CONNECTACK 2
-#define ARQ_DISC 3
-#define ARQ_WAITACK 4
-#define ARQ_WAITDATA 5			// Waiting for more data before polling
+#define ARQ_CONNECTING	1
+#define ARQ_CONNECTACK	2
+#define ARQ_DISC		3
+#define ARQ_WAITACK		4
+#define ARQ_WAITDATA	5			// Waiting for more data before polling
 
 	char LastMsg[80];			// Last message sent that expects an ack
 	int LastLen;
@@ -353,13 +338,10 @@ typedef struct ARQINFO
 	int TXLen;
 	int TurnroundTimer;			// RX to TX delay.
 	int TXDelay;
-
 } *ARQINFO;
 
-typedef struct FLINFO
-{
+typedef struct FLINFO {
 	// Fields for MPSK  Session Ports )
-
 	BOOL TX;						// Set when FLDigi is transmitting
 	char DefaultMode[64];			// Mode to return to after session
 	int DefaultFreq;				// Freq to return to after session
@@ -376,13 +358,10 @@ typedef struct FLINFO
 	char CurrentMode[20];			// Mode to return to after session
 	int	Responding;					// If FLDigi is responding to conmands
 	BOOL MCASTMODE;					// If port is in MCAST RX MOde
-
 } *FLINFO;
 
-typedef struct MPSKINFO
-{
+typedef struct MPSKINFO {
 	// Fields for MPSK  Session Ports )
-
 	int ConnTimeOut;
 	BOOL TX;						// Set when Multipsk is transmitting
 	char DefaultMode[20];			// Mode to return to after session
@@ -390,8 +369,7 @@ typedef struct MPSKINFO
 	int MaxSessions;
 } *MPSKINFO;
 
-struct FreeDataINFO
-{
+struct FreeDataINFO {
 	int startingTNC;
 	int TNCRunning;
 	int Conecting;
@@ -400,9 +378,9 @@ struct FreeDataINFO
 	char toCall[10];
 	char farCall[10];			// TNC Call
 	char useBaseCall;			// Use base call (without ssid) for TNC Call
-	char * Capture;				// Capture Device Name
-	char * Playback;			// Playback Device Name
-	char * hamlibHost;
+	char *Capture;				// Capture Device Name
+	char *Playback;			// Playback Device Name
+	char *hamlibHost;
 	int hamlibPort;
 
 	unsigned char toSendData[8192]; // Buffer data from node for more efficiency
@@ -411,7 +389,7 @@ struct FreeDataINFO
 	unsigned char toSendMsg[256]; // Buffer data from node for more efficiency
 	int toSendMsgCount;
 	int toSendMsgTimeout;
-	char * RXDir;				// Directory for Received Files
+	char *RXDir;				// Directory for Received Files
 	int CONOK;					// Virtual Lisren Flag
 	int Chat;					// In Chat Mode
 	char ChatCall[10];
@@ -422,23 +400,22 @@ struct FreeDataINFO
 	int TXLevel;
 	int Explorer;				// Enable reporting to Freedata Explorer
 	char SSIDList[256];
-	char * SSIDS[16];
+	char *SSIDS[16];
 };
 
 struct sixPackInfo;
 
-typedef struct TNCINFO
-{ 
+typedef struct TNCINFO {
 	HWND hDlg;						// Status Window Handle
-	int (FAR * WebWindowProc)(struct TNCINFO * TNC, char * Buff, BOOL LOCAL);	// Routine to build web status window
+	int (FAR *WebWindowProc)(struct TNCINFO *TNC, char *Buff, BOOL LOCAL);	// Routine to build web status window
 	int WebWinX;
 	int WebWinY;				// Size of window
-	char * WebBuffer;			// Buffer for logs
+	char *WebBuffer;			// Buffer for logs
 	int RigControlRow;			// Rig Control Line in Dialog
-	struct _EXTPORTDATA * PortRecord; // BPQ32 port record for this port
-	struct RIGINFO * RIG;		// Pointer to Rig Control RIG record for RX or Both 
-	struct RIGINFO * TXRIG;		// Pointer to Rig Control RIG record for TX 
-	char * InitScript;			// Initialisation Commands
+	struct _EXTPORTDATA *PortRecord; // BPQ32 port record for this port
+	struct RIGINFO *RIG;		// Pointer to Rig Control RIG record for RX or Both 
+	struct RIGINFO *TXRIG;		// Pointer to Rig Control RIG record for TX 
+	char *InitScript;			// Initialisation Commands
 	int InitScriptLen;			// Length
 	time_t SessionTimeLimit;	// Optional limit to total session time
 	time_t DefaultSessionTimeLimit;	// Configured value
@@ -448,28 +425,27 @@ typedef struct TNCINFO
 
 	int Hardware;				// Hardware Type
 
-#define H_WINMOR 1
-#define H_SCS 2
-#define H_KAM 3
-#define H_AEA 4
-#define H_HAL 5
-#define H_TELNET 6
-#define H_TRK 7
-#define H_TRKM 7
-#define H_V4 8
-#define H_UZ7HO 9
-#define H_MPSK 10
-#define H_FLDIGI 11
-#define H_UIARQ 12
-#define H_ARDOP 13
-#define H_VARA 14
-#define H_SERIAL 15
-#define H_KISSHF 16
-#define H_WINRPR 17
-#define H_HSMODEM 18
-#define H_FREEDATA 19
-#define H_SIXPACK 20
-
+#define H_WINMOR	1
+#define H_SCS		2
+#define H_KAM		3
+#define H_AEA		4
+#define H_HAL		5
+#define H_TELNET	6
+#define H_TRK		7
+#define H_TRKM		7
+#define H_V4		8
+#define H_UZ7HO		9
+#define H_MPSK		10
+#define H_FLDIGI	11
+#define H_UIARQ		12
+#define H_ARDOP		13
+#define H_VARA		14
+#define H_SERIAL	15
+#define H_KISSHF	16
+#define H_WINRPR	17
+#define H_HSMODEM	18
+#define H_FREEDATA	19
+#define H_SIXPACK	20
 
 	int Port;					// BPQ Port Number
 
@@ -477,29 +453,28 @@ typedef struct TNCINFO
 
 	BOOL Minimized;				// Start Minimized flag
 
-	void * WINMORtoBPQ_Q;			// Frames for BPQ, indexed by BPQ Port
-	void * BPQtoWINMOR_Q;			// Frames for WINMOR. indexed by WINMOR port. Only used it TCP session is blocked
+	void *WINMORtoBPQ_Q;			// Frames for BPQ, indexed by BPQ Port
+	void *BPQtoWINMOR_Q;			// Frames for WINMOR. indexed by WINMOR port. Only used it TCP session is blocked
 
 	SOCKET TCPSock;				// Control Socket
 	SOCKET TCPDataSock;			// Data Socket
 	SOCKET PacketSock;			// Packet Over TCP (ARDOP)
 
-	char * WINMORSignon;		// Pointer to message for secure signin
-	char * HostName;			// WINMOR Host - may be dotted decimal or DNS Name
+	char *WINMORSignon;		// Pointer to message for secure signin
+	char *HostName;			// WINMOR Host - may be dotted decimal or DNS Name
 	int TCPPort;				//
 	int PacketPort;				// Packet Over TCP (ARDOP)
-	char * ApplCmd;				// Application to connect to on incoming connect (null = leave at command handler)
+	char *ApplCmd;				// Application to connect to on incoming connect (null = leave at command handler)
 	BOOL SwallowSignon;			// Set to suppress *** connected to APPL
 
-    union
-	{
+	union {
 		UCHAR TCPBuffer[1000];		// For converting byte stream to messages
 		UCHAR DEDBuffer[1000];		// For converting byte stream to messages
 		UCHAR KISSBuffer[1000];		// For KISS over Host Mode
 	};
 
-	UCHAR * ARDOPBuffer;			// Needs to be pretty big, so Malloc
-	UCHAR * ARDOPDataBuffer;		// Needs to be pretty big, so Malloc
+	UCHAR *ARDOPBuffer;			// Needs to be pretty big, so Malloc
+	UCHAR *ARDOPDataBuffer;		// Needs to be pretty big, so Malloc
 
 	int InputLen;					// Data we have already = Offset of end of an incomplete packet;
 	int DataInputLen;				// Data we have already = Offset of end of an incomplete packet;
@@ -512,7 +487,6 @@ typedef struct TNCINFO
 	int	MSGTYPE;				// DED Msg Type
 
 	int HOSTSTATE;				// ded HOST state machine
-
 
 	BOOL StartSent;				// Codec Start send (so will get a disconnect)
 	int ConnectPending;			// Set if Connect Pending Received. If so, mustn't allow freq change.
@@ -614,8 +588,7 @@ typedef struct TNCINFO
 	BOOL UseAPPLCallsforPactor;		// Pactor to use Applcalls
 
 	// Fields for reporting to WL2K Map
-
-	struct WL2KInfo * WL2K;
+	struct WL2KInfo *WL2K;
 
 /*
 	char * Host;
@@ -644,13 +617,13 @@ typedef struct TNCINFO
 	struct STREAMINFO Streams[27];	// 0 is Pactor 1 - 10 are ax.25.
 	int LastStream;				// Last one polled for status or send
 
-	void * BPQtoRadio_Q;			// Frames to Rig Interface
-	void * RadiotoBPQ_Q;			// Frames from Rig Interface
+	void *BPQtoRadio_Q;			// Frames to Rig Interface
+	void *RadiotoBPQ_Q;			// Frames from Rig Interface
 
-	void * KISSTX_Q;				// Frames to Host Mode KISS interface
-	struct PORTCONTROL * VirtualPORT; // Pointer to Virtual Packet Port of Host Mode KISS
+	void *KISSTX_Q;				// Frames to Host Mode KISS interface
+	struct PORTCONTROL *VirtualPORT; // Pointer to Virtual Packet Port of Host Mode KISS
 
-	char * InitPtr;				// Next Command
+	char *InitPtr;				// Next Command
 	int	ReinitState;			// Reinit State Machine
 	int	ReinitCount;			// Count for DED Recovery
 	int	TermReinitCount;		// Count for DED Term Mode Recovery
@@ -723,15 +696,14 @@ typedef struct TNCINFO
 	BOOL NeedPACTOR;				// Set if need to send PACTOR to put into Standby Mode
 	int CmdStream;					// Stream last command was issued on
 
-	union
-	{
-		struct TCPINFO * TCPInfo;		// Telnet Server Specific Data
-		struct AGWINFO * AGWInfo;		// AGW Stream Mode Specific Data
-		struct MPSKINFO * MPSKInfo;		// MPSK Stream Mode Specific Data
-		struct FLINFO * FLInfo;			// FLDIGI Stream Mode Specific Data
+	union {
+		struct TCPINFO *TCPInfo;		// Telnet Server Specific Data
+		struct AGWINFO *AGWInfo;		// AGW Stream Mode Specific Data
+		struct MPSKINFO *MPSKInfo;		// MPSK Stream Mode Specific Data
+		struct FLINFO *FLInfo;			// FLDIGI Stream Mode Specific Data
 	};
 
-	struct ARQINFO * ARQInfo;	// FLDIGI/FLARQ Stream Mode Specific Data
+	struct ARQINFO *ARQInfo;	// FLDIGI/FLARQ Stream Mode Specific Data
 
 	BOOL DataBusy;					// Waiting for Data Ack - Don't send any more data
 	BOOL CommandBusy;				// Waiting for Command ACK
@@ -972,3 +944,7 @@ LRESULT CALLBACK PacWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
 #define W98_SERIAL_GETDATA     0x801
 #define W98_SERIAL_SETDATA     0x802
+
+
+#endif	/* !TNCINFO_H_ */
+

@@ -33,22 +33,20 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include "cheaders.h"
 #include "tncinfo.h"
 
+
 int C_Q_COUNT(VOID *PQ);
-VOID SENDUIMESSAGE(struct DATAMESSAGE * Msg);
+VOID SENDUIMESSAGE(struct DATAMESSAGE *Msg);
 
-VOID TNCTimerProc()
-{
-	//	CALLED AT 10 HZ
 
+VOID TNCTimerProc() {
+	// CALLED AT 10 HZ
 	int n = BPQHOSTSTREAMS;
 	PBPQVECSTRUC HOSTSESS = BPQHOSTVECTOR;
-	TRANSPORTENTRY * Session;
+	TRANSPORTENTRY *Session;
 	UCHAR DISCFLAG = 0;
 
-	while (n--)
-	{
-		//	Action any DISC Requests (must be done in timer owning process)
-
+	while (n--) {
+		// Action any DISC Requests (must be done in timer owning process)
 		if (HOSTSESS->HOSTFLAGS & 0x40)		// DISC REQUEST
 		{
 			if (HOSTSESS->HOSTFLAGS & 0x20)	// Stay?
@@ -62,8 +60,7 @@ VOID TNCTimerProc()
 			{
 				HOSTSESS->HOSTFLAGS |= 3;		//  STATE CHANGE
 #ifndef LINBPQ
-				if (HOSTSESS->HOSTHANDLE);
-				{
+				if (HOSTSESS->HOSTHANDLE) {
 					PostMessage(HOSTSESS->HOSTHANDLE, BPQMsg, HOSTSESS->HOSTSTREAM, 4);
 				}
 #endif
@@ -83,31 +80,27 @@ VOID TNCTimerProc()
 	
 		// Check Trace Q
 
-		if (HOSTSESS->HOSTAPPLFLAGS & 0x80)
-		{
-			if (HOSTSESS->HOSTTRACEQ)
-			{
+		if (HOSTSESS->HOSTAPPLFLAGS & 0x80) {
+			if (HOSTSESS->HOSTTRACEQ) {
 				int Count = C_Q_COUNT(&HOSTSESS->HOSTTRACEQ);
 
 				if (Count > 100)
-						ReleaseBuffer((void *)Q_REM((void *)&HOSTSESS->HOSTTRACEQ));
+					ReleaseBuffer((void *)Q_REM((void *)&HOSTSESS->HOSTTRACEQ));
 			}
 		}
 		HOSTSESS++;
 	}
 }
 
-VOID SendSmartID(struct PORTCONTROL * PORT)
-{
-	struct _MESSAGE * ID = IDMSG;
-	struct _MESSAGE * Buffer;
+VOID SendSmartID(struct PORTCONTROL *PORT) {
+	struct _MESSAGE *ID = IDMSG;
+	struct _MESSAGE *Buffer;
 
 	PORT->SmartIDNeeded = 0;
 
 	Buffer = GetBuff();
 
-	if (Buffer)
-	{
+	if (Buffer) {
 		memcpy(Buffer, ID, ID->LENGTH);
 
 		Buffer->PORT = PORT->PORTNUMBER;
@@ -135,28 +128,22 @@ VOID SendSmartID(struct PORTCONTROL * PORT)
 }
 
 
-VOID SENDIDMSG()
-{
-	struct PORTCONTROL * PORT = PORTTABLE;
-	struct _MESSAGE * ID = IDMSG;
-	struct _MESSAGE * Buffer;
+VOID SENDIDMSG() {
+	struct PORTCONTROL *PORT = PORTTABLE;
+	struct _MESSAGE *ID = IDMSG;
+	struct _MESSAGE *Buffer;
 
-	while (PORT)
-	{
-		if (PORT->PROTOCOL < 10)			// Not Pactor-style
-		{
+	while (PORT) {
+		if (PORT->PROTOCOL < 10) {			// Not Pactor-style
 			Buffer = GetBuff();
 		
-			if (Buffer)
-			{
+			if (Buffer) {
 				memcpy(Buffer, ID, ID->LENGTH);
-			
+
 				Buffer->PORT = PORT->PORTNUMBER;
 
-				//	IF PORT HAS A CALLSIGN DEFINED, SEND THAT INSTEAD
-
-				if (PORT->PORTCALL[0] > 0x40)
-				{
+				// IF PORT HAS A CALLSIGN DEFINED, SEND THAT INSTEAD
+				if (PORT->PORTCALL[0] > 0x40) {
 					memcpy(Buffer->ORIGIN, PORT->PORTCALL, 7);
 					Buffer->ORIGIN[6] |= 1;		// SET END OF CALL BIT
 				}
@@ -167,31 +154,25 @@ VOID SENDIDMSG()
 	}
 }
 
+VOID SENDBTMSG() {
+	struct PORTCONTROL *PORT = PORTTABLE;
+	struct _MESSAGE *Buffer;
+	char *ptr1;
+	char *ptr2;
 
-
-VOID SENDBTMSG()
-{
-	struct PORTCONTROL * PORT = PORTTABLE;
-	struct _MESSAGE * Buffer;
-	char * ptr1, * ptr2;
-
-	while (PORT)
-	{
-		if (PORT->PROTOCOL >= 10 || PORT->PORTUNPROTO == 0)	// Pactor-style or no UNPROTO ADDR?
-		{
+	while (PORT) {
+		if (PORT->PROTOCOL >= 10 || PORT->PORTUNPROTO == 0) {	// Pactor-style or no UNPROTO ADDR?
 			PORT = PORT->PORTPOINTER;
 			continue;
 		}
 		
 		Buffer = GetBuff();
 
-		if (Buffer)
-		{
+		if (Buffer) {
 			memcpy(Buffer->DEST, PORT->PORTUNPROTO, 7);
 			Buffer->DEST[6] |= 0xC0;		// Set Command bits
 
-			//	Send from BBSCALL unless PORTBCALL defined
-
+			// Send from BBSCALL unless PORTBCALL defined
 			if (PORT->PORTBCALL[0] > 32)
 				memcpy(Buffer->ORIGIN, PORT->PORTBCALL, 7);
 			else if (APPLCALLTABLE->APPLCALL[0] > 32) 
@@ -203,9 +184,7 @@ VOID SENDBTMSG()
 			ptr2 = &Buffer->CTL;				// Digi field in buffer
 
 			// Copy any digis
-
-			while (*(ptr1))
-			{
+			while (*(ptr1)) {
 				memcpy(ptr2, ptr1, 7);
 				ptr1 += 7;
 				ptr2 += 7;
@@ -213,28 +192,27 @@ VOID SENDBTMSG()
 
 			*(ptr2 - 1) |= 1;					// Set End of Address
 			*(ptr2++) = UI;
-	
+
 			memcpy(ptr2, &BTHDDR.PID, BTHDDR.LENGTH);
 			ptr2 += BTHDDR.LENGTH;
-			Buffer->LENGTH = (int)(ptr2 - (char *)Buffer);			
+			Buffer->LENGTH = (int)(ptr2 - (char*)Buffer);
 			Buffer->PORT = PORT->PORTNUMBER;
- 	
+
 			C_Q_ADD(&IDMSG_Q, Buffer);
 		}
 		PORT = PORT->PORTPOINTER;
 	}
 }
 
-VOID SENDUIMESSAGE(struct DATAMESSAGE * Msg)
-{
-	struct PORTCONTROL * PORT = PORTTABLE;
-	struct _MESSAGE * Buffer;
-	char * ptr1, * ptr2;
+VOID SENDUIMESSAGE(struct DATAMESSAGE *Msg) {
+	struct PORTCONTROL *PORT = PORTTABLE;
+	struct _MESSAGE *Buffer;
+	char *ptr1;
+	char *ptr2;
 
 	Msg->LENGTH -= MSGHDDRLEN;	// Remove Header
 
-	while (PORT)
-	{
+	while (PORT) {
 		if ((PORT->PROTOCOL == 10 && PORT->UICAPABLE == 0) || PORT->PORTUNPROTO == 0)	// Pactor-style or no UNPROTO ADDR?
 		{
 			PORT = PORT->PORTPOINTER;
@@ -243,13 +221,11 @@ VOID SENDUIMESSAGE(struct DATAMESSAGE * Msg)
 
 		Buffer = GetBuff();
 
-		if (Buffer)
-		{
+		if (Buffer) {
 			memcpy(Buffer->DEST, PORT->PORTUNPROTO, 7);
 			Buffer->DEST[6] |= 0xC0;		// Set Command bits
 
 			//	Send from BBSCALL unless PORTBCALL defined
-
 			if (PORT->PORTBCALL[0] > 32)
 				memcpy(Buffer->ORIGIN, PORT->PORTBCALL, 7);
 			else if (APPLCALLTABLE->APPLCALL[0] > 32) 
@@ -277,23 +253,19 @@ VOID SENDUIMESSAGE(struct DATAMESSAGE * Msg)
 			Buffer->LENGTH = (int)(ptr2 - (char *)Buffer);			
 			Buffer->PORT = PORT->PORTNUMBER;
 
-			if (PORT->PROTOCOL == 10)
-			{
-				EXTPORTDATA * EXTPORT = (EXTPORTDATA *) PORT;
-				C_Q_ADD(&EXTPORT->UI_Q,	Buffer);
-			}
-			else
+			if (PORT->PROTOCOL == 10) {
+				EXTPORTDATA *EXTPORT = (EXTPORTDATA*)PORT;
+				C_Q_ADD(&EXTPORT->UI_Q, Buffer);
+			} else
 				C_Q_ADD(&IDMSG_Q, Buffer);
 		}
 		PORT = PORT->PORTPOINTER;
 	}
 }
 
-Dll VOID APIENTRY Send_AX(UCHAR * Block, DWORD Len, UCHAR Port)
-{
+Dll VOID APIENTRY Send_AX(UCHAR *Block, DWORD Len, UCHAR Port) {
 	// Block included the 7/11 byte header, Len does not
-
-	struct PORTCONTROL * PORT;
+	struct PORTCONTROL *PORT;
 	PMESSAGE Copy;
 
 	if (Len > 360 - 15)
@@ -316,16 +288,15 @@ Dll VOID APIENTRY Send_AX(UCHAR * Block, DWORD Len, UCHAR Port)
 
 	Copy->LENGTH = (USHORT)Len + MSGHDDRLEN;
 
-	if (PORT->PROTOCOL == 10 && PORT->TNC && PORT->TNC->Hardware != H_KISSHF)
-	{
+	if (PORT->PROTOCOL == 10 && PORT->TNC && PORT->TNC->Hardware != H_KISSHF) {
 		// 	Pactor Style. Probably will only be used for Tracker uneless we do APRS over V4 or WINMOR
-
-		EXTPORTDATA * EXTPORT = (EXTPORTDATA *) PORT;
+		EXTPORTDATA *EXTPORT = (EXTPORTDATA*)PORT;
 
 		if (EXTPORT->UI_Q)
 			C_Q_ADD(&EXTPORT->UI_Q, Copy);
 		else
 			C_Q_ADD(&EXTPORT->UI_Q, Copy);
+
 		return;
 	}
 
@@ -335,32 +306,22 @@ Dll VOID APIENTRY Send_AX(UCHAR * Block, DWORD Len, UCHAR Port)
 }
 
 
-TRANSPORTENTRY * SetupSessionFromHost(PBPQVECSTRUC HOST, UINT ApplMask)
-{
+TRANSPORTENTRY *SetupSessionFromHost(PBPQVECSTRUC HOST, UINT ApplMask) {
 	// Create a Transport (L4) session linked to an incoming HOST (API) Session
-
-	TRANSPORTENTRY * NewSess = L4TABLE;
+	TRANSPORTENTRY *NewSess = L4TABLE;
 	int Index = 0;
 
-	
-	while (Index < MAXCIRCUITS)
-	{
-		if (NewSess->L4USER[0] == 0)
-		{
+	while (Index < MAXCIRCUITS) {
+		if (NewSess->L4USER[0] == 0) {
 			// Got One
+			UCHAR *ourcall = &MYCALL[0];
 
-			UCHAR * ourcall = &MYCALL[0];
-		
 			// IF APPL PORT USE APPL CALL, ELSE NODE CALL
-
-			if (ApplMask)
-			{
+			if (ApplMask) {
 				// Circuit for APPL - look for an APPLCALL
+				APPLCALLS *APPL = APPLCALLTABLE;
 
-				APPLCALLS * APPL = APPLCALLTABLE;
-
-				while ((ApplMask & 1) == 0)
-				{
+				while ((ApplMask & 1) == 0) {
 					ApplMask >>= 1;
 					APPL++;
 				}
@@ -381,22 +342,17 @@ TRANSPORTENTRY * SetupSessionFromHost(PBPQVECSTRUC HOST, UINT ApplMask)
 			NewSess->L4TARGET.HOST = HOST;
 			NewSess->L4STATE = 5;
 
-			
 			NewSess->SESSIONT1 = L4T1;
 			NewSess->L4WINDOW = (UCHAR)L4DEFAULTWINDOW;
 			NewSess->SESSPACLEN = PACLEN;				// Default;
 
 			return NewSess;
-			}
+		}
 		Index++;
 		NewSess++;
 	}
 
 	// Table Full
-
 	return NULL;
 }
-
-
-
 

@@ -156,9 +156,10 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 
 #include <time.h>
 
-#define WSA_ACCEPT WM_USER + 1
-#define WSA_DATA WM_USER + 2
-#define WSA_CONNECT WM_USER + 3
+
+#define WSA_ACCEPT	WM_USER + 1
+#define WSA_DATA	WM_USER + 2
+#define WSA_CONNECT	WM_USER + 3
 
 // Cater for only systems without IPV6_V6ONLY
 
@@ -167,21 +168,21 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #endif
 
 #ifndef MAXGETHOSTSTRUCT
-#define MAXGETHOSTSTRUCT        1024
+#define MAXGETHOSTSTRUCT 1024
 #endif
 
 
-#define	FEND	0xC0	// KISS CONTROL CODES 
-#define	FESC	0xDB
-#define	TFEND	0xDC
-#define	TFESC	0xDD
+#define FEND	0xC0	// KISS CONTROL CODES 
+#define FESC	0xDB
+#define TFEND	0xDC
+#define TFESC	0xDD
 
 int ResolveDelay = 0;
 
 
 extern BOOL StartMinimized;
 
-VOID * zalloc(int len);
+VOID *zalloc(int len);
 
 int ResetExtDriver(int num);
 BOOL ProcessConfig();
@@ -192,9 +193,9 @@ extern UCHAR BPQDirectory[];
 
 extern int OffsetH, OffsetW;
 
-static void ResolveNames(VOID * Param);
-void OpenSockets(VOID * Param);
-void CloseSockets(struct AXIPPORTINFO * PORT);
+static void ResolveNames(VOID *Param);
+void OpenSockets(VOID *Param);
+void CloseSockets(struct AXIPPORTINFO *PORT);
 
 
 static int CONVFROMAX25(char *incall, char *outcall);
