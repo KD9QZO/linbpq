@@ -1,0 +1,4 @@
+[submodule "HTML"]
+	path = HTML
+	url = https://github.com/KD9QZO/BPQHTMLPages.git
+	branch = development
