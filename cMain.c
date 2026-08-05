@@ -1,25 +1,32 @@
-/*
-Copyright 2001-2022 John Wiseman G8BPQ
-
-This file is part of LinBPQ/BPQ32.
-
-LinBPQ/BPQ32 is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-LinBPQ/BPQ32 is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
-*/
+/**
+ * \file cMain.c
+ * \brief The main C file for BPQ32
+ *
+ * \date	2026-08-04
+ * \author	Gerad Munsch [KD9QZO] <gmunsch@kd9qzo.com>
+ * \author	John Wiseman [G8BPQ]
+ * \copyright Copyright 2026 Gerad Munsch [KD9QZO] \n
+ *            Copyright 2001-2022 John Wiseman [G8BPQ]
+ *
+ * \par License
+ * \parblock
+ * This file is part of LinBPQ/BPQ32.
+ *
+ * LinBPQ/BPQ32 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * LinBPQ/BPQ32 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with LinBPQ/BPQ32.
+ * If not, see http://www.gnu.org/licenses
+ * \endparblock
+ */
 
 
 //
-//	C replacement for Main.asm
+// C replacement for Main.asm
 //
 #define Kernel
 
@@ -32,7 +39,7 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 
 #include "time.h"
 #include "stdio.h"
-#include <fcntl.h>					 
+#include <fcntl.h>
 
 #include "kernelresource.h"
 #include "cheaders.h"
@@ -40,26 +47,26 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include "mqtt.h"
 #include "kiss.h"
 
-VOID L2Routine(struct PORTCONTROL * PORT, PMESSAGE Buffer);
-VOID ProcessIframe(struct _LINKTABLE * LINK, PDATAMESSAGE Buffer);
+VOID L2Routine(struct PORTCONTROL *PORT, PMESSAGE Buffer);
+VOID ProcessIframe(struct _LINKTABLE *LINK, PDATAMESSAGE Buffer);
 VOID FindLostBuffers();
 VOID ReadMH();
-void GetPortCTEXT(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, struct CMDX * CMD);
+void GetPortCTEXT(TRANSPORTENTRY *Session, char *Bufferptr, char *CmdTail, struct CMDX *CMD);
 int upnpInit();
 void AISTimer();
 void ADSBTimer();
-VOID SendSmartID(struct PORTCONTROL * PORT);
+VOID SendSmartID(struct PORTCONTROL *PORT);
 int CanPortDigi(int Port);
-int	KissEncode(UCHAR * inbuff, UCHAR * outbuff, int len);
+int	KissEncode(UCHAR *inbuff, UCHAR *outbuff, int len);
 void MQTTTimer();
 void SaveMH();
-VOID InformPartner(struct _LINKTABLE * LINK, int Reason);
-VOID L2SENDCOMMAND(struct _LINKTABLE * LINK, int CMD);
-void WritePacketLogThread(void * param);
+VOID InformPartner(struct _LINKTABLE *LINK, int Reason);
+VOID L2SENDCOMMAND(struct _LINKTABLE *LINK, int CMD);
+void WritePacketLogThread(void *param);
 void hookNodeStarted();
 void hookNodeRunning();
 void DeleteLogFiles(int Age);
-void APIL2Trace(struct _MESSAGE * Message, char * Dirn);
+void APIL2Trace(struct _MESSAGE *Message, char *Dirn);
 
 #include "configstructs.h"
 
@@ -82,59 +89,60 @@ int nodeStatusTimer = 20 * 60;		// 20 mins
 	
 int LogAge = 10;
 
-struct PORTCONFIG * PortRec;
+struct PORTCONFIG *PortRec;
 
 #define RNRSET 0x2				// RNR RECEIVED FROM OTHER END
 #define	PFBIT 0x10		// POLL/FINAL BIT IN CONTROL BYTE
 
-//	STATION INFORMATION
+
+// STATION INFORMATION
 
 char DATABASESTART[14] = "";
 char xMAJORVERSION = 4;
 char xMINORVERSION = 9;
 char FILLER1[16] = "";
 
-struct ROUTE * NEIGHBOURS = NULL;
+struct ROUTE *NEIGHBOURS = NULL;
 int  ROUTE_LEN = sizeof(struct ROUTE);
 int  MAXNEIGHBOURS = 20;
 
-struct DEST_LIST * DESTS = NULL;		// NODE LIST
+struct DEST_LIST *DESTS = NULL;				// NODE LIST
 int  DEST_LIST_LEN = sizeof(struct DEST_LIST);
 
-struct _LINKTABLE * LINKS = NULL;
+struct _LINKTABLE *LINKS = NULL;
 int	LINK_TABLE_LEN = sizeof (struct _LINKTABLE); 
 int	MAXLINKS = 30;
 
 
-char	MYCALL[7] = ""; //		DB	7 DUP (0)	; NODE CALLSIGN (BIT SHIFTED)
-char	MYALIASTEXT[6] = ""; //	DB	'      '	; NODE ALIAS (KEEP TOGETHER)
+char MYCALL[7] = "";						//		DB	7 DUP (0)	; NODE CALLSIGN (BIT SHIFTED)
+char MYALIASTEXT[6] = "";					//	DB	'      '	; NODE ALIAS (KEEP TOGETHER)
 
 char MYALIASLOPPED[10];
 char MYCALLLOPPED[10];
 
-UCHAR	MYCALLWITHALIAS[13] = "";
+UCHAR MYCALLWITHALIAS[13] = "";
 
-UCHAR	NETROMCALL[7] = "";				// Call used for NETROM (can be MYCALL)
+UCHAR NETROMCALL[7] = "";					// Call used for NETROM (can be MYCALL)
 
 APPLCALLS APPLCALLTABLE[NumberofAppls] = {0};
 
-UCHAR	MYNODECALL[10] = "";				// NODE CALLSIGN (ASCII)
-UCHAR	MYNETROMCALL[10] = "";				// NETROM CALLSIGN (ASCII)
+UCHAR MYNODECALL[10] = "";					// NODE CALLSIGN (ASCII)
+UCHAR MYNETROMCALL[10] = "";				// NETROM CALLSIGN (ASCII)
 char NODECALLLOPPED[10];
 
-VOID * FREE_Q = NULL;
+VOID *FREE_Q = NULL;
 
 time_t TimeLoaded = 0;
 
-struct PORTCONTROL * PORTTABLE = NULL;
+struct PORTCONTROL *PORTTABLE = NULL;
 int	NUMBEROFPORTS = 0;
 int PORTENTRYLEN = sizeof(struct PORTCONTROL);
 
-struct DEST_LIST * ENDDESTLIST = NULL;		//		; NODE LIST+1
+struct DEST_LIST *ENDDESTLIST = NULL;		//		; NODE LIST+1
 ;
 
-VOID * BUFFERPOOL = NULL;		// START OF BUFFER POOL
-VOID * ENDBUFFERPOOL = NULL;
+VOID *BUFFERPOOL = NULL;		// START OF BUFFER POOL
+VOID *ENDBUFFERPOOL = NULL;
 
 int OBSINIT = 5;				// INITIAL OBSOLESCENCE VALUE
 int OBSMIN = 4;					// MINIMUM TO BROADCAST
@@ -149,14 +157,14 @@ int NUMBEROFBUFFERS = 999;		// PACKET BUFFERS
 
 int PACLEN = 100;				//MAX PACKET SIZE
 
-//	L2 SYSTEM TIMER RUNS AT 3 HZ
+// L2 SYSTEM TIMER RUNS AT 3 HZ
 
-int T3 = 3*61*10;				// LINK VALIDATION TIMER (3 MINS) (+ a bit to reduce RR collisions)
+int T3 = 3 * 61 * 10;			// LINK VALIDATION TIMER (3 MINS) (+ a bit to reduce RR collisions)
 
-int L2KILLTIME = 16*60*10;		// IDLE LINK TIMER (16 MINS)	
+int L2KILLTIME = 16 * 60 * 10;	// IDLE LINK TIMER (16 MINS)	
 int L3LIVES = 15;				// MAX L3 HOPS
-int L4N2 =  3;					// LEVEL 4 RETRY COUNT
-int L4LIMIT = 60*15;			// IDLE SESSION LIMIT - 15 MINS
+int L4N2 = 3;					// LEVEL 4 RETRY COUNT
+int L4LIMIT = 60 * 15;			// IDLE SESSION LIMIT - 15 MINS
 int L4DELAY = 5;				// L4 DELAYED ACK TIMER
 	
 int BBS = 1;					// INCLUDE BBS SUPPORT
@@ -197,8 +205,8 @@ int PoolBuilt = 0;
 //TNCTABLE	DD	0
 //NUMBEROFSTREAMS	DD	0
 
-extern VOID * ENDPOOL;
-extern void * APPL_Q;				// Queue of frames for APRS Appl
+extern VOID *ENDPOOL;
+extern void *APPL_Q;				// Queue of frames for APRS Appl
 
 extern BOOL APRSActive;
 extern int DEBUGINP3;
@@ -206,16 +214,15 @@ extern int DEBUGINP3;
 #define BPQHOSTSTREAMS	64
 
 // Although externally streams are numbered 1 to 64, internally offsets are 0 - 63
-
-BPQVECSTRUC XDUMMY = {0};					// Needed to force correct order of following
+BPQVECSTRUC XDUMMY = { 0 };					// Needed to force correct order of following
 
 BPQVECSTRUC BPQHOSTVECTOR[BPQHOSTSTREAMS + 5] = {0};
 
-BPQVECSTRUC * TELNETMONVECPTR = &BPQHOSTVECTOR[BPQHOSTSTREAMS];
-BPQVECSTRUC * AGWMONVECPTR = &BPQHOSTVECTOR[BPQHOSTSTREAMS + 1];
-BPQVECSTRUC * APRSMONVECPTR = &BPQHOSTVECTOR[BPQHOSTSTREAMS + 2];
-BPQVECSTRUC * IPHOSTVECTORPTR = &BPQHOSTVECTOR[BPQHOSTSTREAMS + 3];
-BPQVECSTRUC * FILEMONVECTOR = &BPQHOSTVECTOR[BPQHOSTSTREAMS + 4];
+BPQVECSTRUC *TELNETMONVECPTR = &BPQHOSTVECTOR[BPQHOSTSTREAMS];
+BPQVECSTRUC *AGWMONVECPTR = &BPQHOSTVECTOR[BPQHOSTSTREAMS + 1];
+BPQVECSTRUC *APRSMONVECPTR = &BPQHOSTVECTOR[BPQHOSTSTREAMS + 2];
+BPQVECSTRUC *IPHOSTVECTORPTR = &BPQHOSTVECTOR[BPQHOSTSTREAMS + 3];
+BPQVECSTRUC *FILEMONVECTOR = &BPQHOSTVECTOR[BPQHOSTSTREAMS + 4];
 
 int BPQVECLENGTH = sizeof(BPQVECSTRUC);
 
@@ -228,9 +235,9 @@ UCHAR UNPROTOCALL[80] = "";
 
 UCHAR ExcludeList[71] = "";		// 10 ENTRIES, 7 BYTES EACH
 
-char * INFOMSG = NULL;
+char *INFOMSG = NULL;
 
-char * CTEXTMSG = NULL;
+char *CTEXTMSG = NULL;
 int CTEXTLEN = 0;
 
 UCHAR MYALIAS[7] = "";				// ALIAS IN AX25 FORM
@@ -241,16 +248,16 @@ UCHAR NORMCALL[10] = "";			// CALLSIGN IN NORMAL FORMAT
 int NORMLEN	= 0;					// LENGTH OF CALL IN NORMCALL	
 
 int CURRENTPORT = 0;				// PORT FOR CURRENT MESSAGE
-VOID * CURRENTPORTPTR = NULL;		// PORT CONTROL TABLE ENTRY FOR CURRENT PORT
+VOID *CURRENTPORTPTR = NULL;		// PORT CONTROL TABLE ENTRY FOR CURRENT PORT
 
 int SDCBYTE = 0;					// CONTROL BYTE FOR CURRENT FRAME
 
-VOID * BUFFER = NULL;				// GENERAL SAVE AREA FOR BUFFER ADDR
-VOID * ADJBUFFER = NULL;			// BASE ADJUSED FOR DIGIS
+VOID *BUFFER = NULL;				// GENERAL SAVE AREA FOR BUFFER ADDR
+VOID *ADJBUFFER = NULL;			// BASE ADJUSED FOR DIGIS
 
 UCHAR TEMPFIELD[7] = "";			// ADDRESS WORK FILED
 
-void * TRACE_Q	= NULL;				// TRANSMITTED FRAMES TO BE TRACED
+void *TRACE_Q	= NULL;				// TRANSMITTED FRAMES TO BE TRACED
 
 int RANDOM = 0;						// 'RANDOM' NUMBER FOR PERSISTENCE CALCS
  
@@ -258,37 +265,37 @@ int L2TIMERFLAG = 0;				// INCREMENTED AT 18HZ BY TIMER INTERRUPT
 
 char HEADERCHAR	= '}';				// CHAR FOR _NODE HEADER MSGS
 
-VOID * LASTPOINTER = NULL;			// PERVIOUS _NODE DURING CHAINING
+VOID *LASTPOINTER = NULL;			// PERVIOUS _NODE DURING CHAINING
 
 int REALTIMETICKS = 0;				// Count of 100 ms intervals since load
 				
 
-VOID * CONFIGPTR = NULL;			// Internal Config Get Offset
+VOID *CONFIGPTR = NULL;			// Internal Config Get Offset
 
 int AUTOSAVE = 0;					// AUTO SAVE NODES ON EXIT FLAG
 int L4APPL = 1;						// Application for BBSCALL/ALIAS connects
 int CFLAG = 0;						// C =HOST Command
 
-VOID * IDMSG_Q = NULL;				// ID/BEACONS WAITING TO BE SENT
+VOID *IDMSG_Q = NULL;				// ID/BEACONS WAITING TO BE SENT
 
 int	NODESINPROGRESS = 0;
 int NODESToOnePort = 0;				// Set to port num to send NODES to only one port.
 
-VOID * CURRENTNODE = NULL;			// NEXT _NODE TO SEND
-VOID * DESTHEADER = NULL;			// HEAD OF SORTED NODES CHAIN
+VOID *CURRENTNODE = NULL;			// NEXT _NODE TO SEND
+VOID *DESTHEADER = NULL;			// HEAD OF SORTED NODES CHAIN
 
 int	L3TIMER	= 1;					// TIMER FOR 'NODES' MESSAGE
 int	IDTIMER = 0;					// TIMER FOR ID MESSAGE
 int	BTTIMER = 0;					// TIMER FOR BT MESSAGE
 
-UCHAR * NEXTFREEDATA = NULL;				// ADDRESS OF NEXT FREE BYTE of shared memory
+UCHAR *NEXTFREEDATA = NULL;				// ADDRESS OF NEXT FREE BYTE of shared memory
 
 int NEEDMH = 0;
 
 struct DATAMESSAGE BTHDDR = {0,0,9,240,13};
 struct _MESSAGE IDHDDR = {0,0,23,0,0,3, 240};
 
-VOID * IDMSG = &IDHDDR;
+VOID *IDMSG = &IDHDDR;
 
 //DD	0		; CHAIN
 //			DB	0		; PORT	
@@ -304,16 +311,16 @@ char BridgeMap[MaxBPQPortNo + 1][MaxBPQPortNo + 1] = {0};
 
 UCHAR XXXXXXXX[DATABYTES] = "";
 
-UCHAR * DATAAREA = &XXXXXXXX[0];
+UCHAR *DATAAREA = &XXXXXXXX[0];
 
-void ** Bufferlist[1000] = {0};
+void **Bufferlist[1000] = { 0 };
 
 extern BOOL IPRequired;
 extern BOOL PMRequired;
 extern int MaxHops;
 extern int MAXRTT;
 extern USHORT CWTABLE[];
-extern struct _TRANSPORTENTRY * L4TABLE;
+extern struct _TRANSPORTENTRY *L4TABLE;
 extern UCHAR ROUTEQUAL;
 extern UINT BPQMsg;
 
@@ -321,22 +328,19 @@ extern int NUMBEROFTNCPORTS;
 
 extern APPLCALLS APPLCALLTABLE[];
 
-//	LOOPBACK PORT ROUTINES
 
-VOID LINKINIT(PEXTPORTDATA PORTVEC)
-{
+// LOOPBACK PORT ROUTINES
+
+VOID LINKINIT(PEXTPORTDATA PORTVEC) {
 	WritetoConsoleLocal("Loopback\n");
 }
 
-VOID LINKTX(PEXTPORTDATA PORTVEC, PMESSAGE Buffer)
-{
-	//	LOOP BACK TO SWITCH
-
-	struct _LINKTABLE * LINK;
+VOID LINKTX(PEXTPORTDATA PORTVEC, PMESSAGE Buffer) {
+	// LOOP BACK TO SWITCH
+	struct _LINKTABLE *LINK;
 	LINK = Buffer->Linkptr;
 
-	if (LINK)
-	{
+	if (LINK) {
 		if (LINK->L2TIMER)
 			LINK->L2TIMER = LINK->L2TIME;
 
@@ -346,118 +350,93 @@ VOID LINKTX(PEXTPORTDATA PORTVEC, PMESSAGE Buffer)
 	C_Q_ADD(&PORTVEC->PORTCONTROL.PORTRX_Q, Buffer);
 }
 
-
-VOID LINKRX()
-{
+VOID LINKRX() {
 }
 
-
-VOID LINKTIMER()
-{
-}
-	
-VOID LINKCLOSE()
-{
+VOID LINKTIMER() {
 }
 
-
-VOID EXTCLOSE()
-{
+VOID LINKCLOSE() {
 }
-	
-BOOL KISSTXCHECK()
-{
+
+VOID EXTCLOSE() {
+}
+
+BOOL KISSTXCHECK() {
 	return 0;
 }
 
-BOOL LINKTXCHECK()
-{
+BOOL LINKTXCHECK() {
 	return 0;
 }
 
-void * Dummy(int fn, int port, PDATAMESSAGE buff)				// Dummy for missing EXT Driver
-{
+void *Dummy(int fn, int port, PDATAMESSAGE buff) {		// Dummy for missing EXT Driver
 	return 0;
 }
 
-VOID EXTINIT(PEXTPORTDATA PORTVEC)
-{
+VOID EXTINIT(PEXTPORTDATA PORTVEC) {
 	// LOAD DLL - NAME IS IN PORT_DLL_NAME
-
-	void *(* Startup) (PEXTPORTDATA PORTVEC);		// ADDR OF Startup ROUTINE
+	void *(*Startup)(PEXTPORTDATA PORTVEC);		// ADDR OF Startup ROUTINE
 
 	PORTVEC->PORT_EXT_ADDR = Dummy;
 
 	Startup = InitializeExtDriver(PORTVEC);
 
-	if (Startup == 0)
-	{
+	if (Startup == 0) {
 		WritetoConsoleLocal("Driver installation failed\n");
 		return;
 	}
 
+	// CALL THE ROUTINE TO START IT UP
+	// Startup returns address of processing routine
+	PORTVEC->PORT_EXT_ADDR = (void *(__cdecl*)(int, int, PDATAMESSAGE))Startup(PORTVEC);;
 
-//	CALL THE ROUTINE TO START IT UP
-
-//	Startup returns address of processing routine
-
-	PORTVEC->PORT_EXT_ADDR = (void *(__cdecl *)(int,int,PDATAMESSAGE))Startup(PORTVEC);;
-	
-	if (PORTVEC->PORT_EXT_ADDR == 0)
-	{
+	if (PORTVEC->PORT_EXT_ADDR == 0) {
 		WritetoConsoleLocal("Driver Initialisation failed\n");
 		return;
 	}
-
 }
 
-VOID EXTTX(PEXTPORTDATA PORTVEC, MESSAGE * Buffer)
-{
-	struct _LINKTABLE * LINK;
-	struct PORTCONTROL * PORT = (struct PORTCONTROL *)PORTVEC;
+VOID EXTTX(PEXTPORTDATA PORTVEC, MESSAGE *Buffer) {
+	struct _LINKTABLE *LINK;
+	struct PORTCONTROL *PORT = (struct PORTCONTROL*)PORTVEC;
 
 //	RESET TIMER, unless BAYCOM 
-
-	if (PORT->KISSFLAGS == 255)	// Used for BAYCOM
-	{
+	if (PORT->KISSFLAGS == 255) {	// Used for BAYCOM
 		PORTVEC->PORT_EXT_ADDR(2, PORT->PORTNUMBER, (PDATAMESSAGE)Buffer);
-		
+
 		return;				// Baycom driver passes frames to trace once sent
 	}
-	
+
 	LINK = Buffer->Linkptr;
 
-	if (LINK)
-	{
+	if (LINK) {
 		if (LINK->L2TIMER)
 			LINK->L2TIMER = LINK->L2TIME;
 
 		if (PORT->TNC == 0 || PORT->TNC->Hardware != H_KISSHF)
 			Buffer->Linkptr = 0;	// CLEAR FLAG FROM BUFFER
 	}
-	
+
 	PORTVEC->PORT_EXT_ADDR(2, PORT->PORTNUMBER, (PDATAMESSAGE)Buffer);
-	
-	if (PORT->PROTOCOL == 10 && PORT->TNC && PORT->TNC->Hardware != H_KISSHF)
-	{
+
+	if (PORT->PROTOCOL == 10 && PORT->TNC && PORT->TNC->Hardware != H_KISSHF) {
 		ReleaseBuffer(Buffer);
 		return;
 	}
-	
+
 	C_Q_ADD(&TRACE_Q, Buffer);
 
 	return;
+}
 
-}	
-
-VOID * GetBuffQuick();
+VOID *GetBuffQuick();
 UINT ReleaseBufferQuick(VOID *pBUFF);
 
-VOID EXTRX(PEXTPORTDATA PORTVEC)
-{
-	struct _MESSAGE * Message;
+VOID EXTRX(PEXTPORTDATA PORTVEC) {
+	struct _MESSAGE *Message;
 	size_t Len;
-	struct PORTCONTROL * PORT = (struct PORTCONTROL *)PORTVEC;
+	struct PORTCONTROL *PORT = (struct PORTCONTROL*)PORTVEC;
 
 Loop:
 
@@ -465,53 +444,42 @@ Loop:
 		return;
 
 	Message = GetBuffQuick();
-	
+
 	if (Message == NULL)
 		return;
 
 	Len = (size_t)PORTVEC->PORT_EXT_ADDR(1, PORT->PORTNUMBER, (PDATAMESSAGE)Message);
 
-	if (Len == 0)
-	{
-		ReleaseBufferQuick((UINT *)Message);
+	if (Len == 0) {
+		ReleaseBufferQuick((UINT*)Message);
 		return;
 	}
 
-	if (PORT->PROTOCOL == 10)
-	{
-		//	PACTOR Style Port - Negative values used to report events - for now -1 = Disconnected  
-
-		if (Len == -1)
-		{
+	if (PORT->PROTOCOL == 10) {
+		// PACTOR Style Port - Negative values used to report events - for now -1 = Disconnected  
+		if (Len == -1) {
 			int Sessno = Message->PORT;
-			TRANSPORTENTRY * Session;
-	
-			ReleaseBufferQuick((UINT *)Message);
-		
-			// GET RID OF ANY SESSION ENTRIES
-	
-			Session = PORTVEC->ATTACHEDSESSIONS[Sessno];
+			TRANSPORTENTRY *Session;
 
-			if (Session)
-			{
-				struct TNCINFO * TNC = PORTVEC->PORTCONTROL.TNC;
+			ReleaseBufferQuick((UINT*)Message);
+
+			// GET RID OF ANY SESSION ENTRIES
+			Session = PORTVEC->ATTACHEDSESSIONS[Sessno];
+			if (Session) {
+				struct TNCINFO *TNC = PORTVEC->PORTCONTROL.TNC;
 
 				CloseSessionPartner(Session);
 
 				// is this the place to run DisconnectScript? 
-
-				if (TNC->DisconnectScript)
-				{
+				if (TNC->DisconnectScript) {
 					int n = 0;
-					struct DATAMESSAGE * Buffer;
+					struct DATAMESSAGE *Buffer;
 
 					TRANSPORTENTRY Session = {0};		//	= TNC->PortRecord->ATTACHEDSESSIONS[Sessno];
 
-					while (TNC->DisconnectScript[n])
-					{
+					while (TNC->DisconnectScript[n]) {
 						Buffer = GetBuff();
-						if (Buffer)
-						{
+						if (Buffer) {
 							Session.Secure_Session = 1;
 							Session.CIRCUITINDEX = -1;
 							Buffer->LENGTH = sprintf(Buffer->L2DATA, "%s\r", TNC->DisconnectScript[n++]) + (sizeof(void *) + 4);
@@ -533,55 +501,43 @@ Loop:
 	return;
 }
 
-VOID EXTTIMER(PEXTPORTDATA PORTVEC)
-{
+VOID EXTTIMER(PEXTPORTDATA PORTVEC) {
 	// Called every 100 mS
-	
-	//	USED TO SEND A RE-INIT IN THE CORRECT PROCESS
 
-	struct TNCINFO * TNC = TNCInfo[PORTVEC->PORTCONTROL.PORTNUMBER];
+	// USED TO SEND A RE-INIT IN THE CORRECT PROCESS
+	struct TNCINFO *TNC = TNCInfo[PORTVEC->PORTCONTROL.PORTNUMBER];
 
-	if (PORTVEC->EXTRESTART)
-	{
-		PORTVEC->EXTRESTART = 0;		//CLEAR
+	if (PORTVEC->EXTRESTART) {
+		PORTVEC->EXTRESTART = 0;										// CLEAR
 		PORTVEC->PORT_EXT_ADDR(4, PORTVEC->PORTCONTROL.PORTNUMBER, 0);
 	}
 
 	PORTVEC->PORT_EXT_ADDR(7, PORTVEC->PORTCONTROL.PORTNUMBER, 0);		// Timer Routine
 
-	if (TNC && TNC->PageChanged)
-	{
+	if (TNC && TNC->PageChanged) {
 		BuildDevicePage(TNC);
 		TNC->PageChanged = FALSE;
 	}
-
 }
 
-VOID EXTSLOWTIMER(PEXTPORTDATA PORTVEC)
-{
+VOID EXTSLOWTIMER(PEXTPORTDATA PORTVEC) {
 	// Called every minute 60 secs
-
 	PORTVEC->PORT_EXT_ADDR(8, PORTVEC->PORTCONTROL.PORTNUMBER, 0);		// Timer Routine
 }
 
-size_t EXTTXCHECK(PEXTPORTDATA PORTVEC, int Chan)
-{
+size_t EXTTXCHECK(PEXTPORTDATA PORTVEC, int Chan) {
 	uintptr_t Temp = Chan;
 
-	return (size_t)PORTVEC->PORT_EXT_ADDR(3, PORTVEC->PORTCONTROL.PORTNUMBER, (void *)Temp);
+	return (size_t)PORTVEC->PORT_EXT_ADDR(3, PORTVEC->PORTCONTROL.PORTNUMBER, (void*)Temp);
 }
 
-VOID PostDataAvailable(TRANSPORTENTRY * Session)
-{
+VOID PostDataAvailable(TRANSPORTENTRY *Session) {
 #ifndef LINBPQ
-	if (Session->L4CIRCUITTYPE & BPQHOST)
-	{
-		BPQVECSTRUC * HostSess = Session->L4TARGET.HOST;
+	if (Session->L4CIRCUITTYPE & BPQHOST) {
+		BPQVECSTRUC *HostSess = Session->L4TARGET.HOST;
 
-		if (HostSess)
-		{
-			if (HostSess->HOSTHANDLE)
-			{
+		if (HostSess) {
+			if (HostSess->HOSTHANDLE) {
 				PostMessage(HostSess->HOSTHANDLE, BPQMsg, HostSess->HOSTSTREAM, 2);
 			}
 		}
@@ -589,17 +545,13 @@ VOID PostDataAvailable(TRANSPORTENTRY * Session)
 #endif
 }
 
-VOID PostStateChange(TRANSPORTENTRY * Session)
-{
+VOID PostStateChange(TRANSPORTENTRY *Session) {
 #ifndef LINBPQ
-	if (Session->L4CIRCUITTYPE & BPQHOST)
-	{
-		BPQVECSTRUC * HostSess = Session->L4TARGET.HOST;
+	if (Session->L4CIRCUITTYPE & BPQHOST) {
+		BPQVECSTRUC *HostSess = Session->L4TARGET.HOST;
 
-		if (HostSess)
-		{
-			if (HostSess->HOSTHANDLE);
-			{
+		if (HostSess) {
+			if (HostSess->HOSTHANDLE) {
 				PostMessage(HostSess->HOSTHANDLE, BPQMsg, HostSess->HOSTSTREAM, 4);
 			}
 		}
@@ -609,21 +561,21 @@ VOID PostStateChange(TRANSPORTENTRY * Session)
 
 #ifdef LINBPQ
 
-#define HDLCTX KHDLCTX
-#define HDLCRX KHDLCRX
-#define HDLCTIMER KHDLCTIMER
-#define HDLCCLOSE KHDLCCLOSE
-#define HDLCTXCHECK KHDLCTXCHECK
+#define HDLCTX			KHDLCTX
+#define HDLCRX			KHDLCRX
+#define HDLCTIMER		KHDLCTIMER
+#define HDLCCLOSE		KHDLCCLOSE
+#define HDLCTXCHECK		KHDLCTXCHECK
 
-#define PC120INIT KHDLCINIT
-#define DRSIINIT KHDLCINIT
-#define TOSHINIT KHDLCINIT
-#define RLC100INIT KHDLCINIT
-#define BAYCOMINIT KHDLCINIT
-#define PA0INIT KHDLCINIT
+#define PC120INIT		KHDLCINIT
+#define DRSIINIT		KHDLCINIT
+#define TOSHINIT		KHDLCINIT
+#define RLC100INIT		KHDLCINIT
+#define BAYCOMINIT		KHDLCINIT
+#define PA0INIT			KHDLCINIT
 
 int KHDLCINIT(PHDLCDATA PORTVEC);
-void KHDLCTX(struct KISSINFO * KISS, PMESSAGE Buffer);
+void KHDLCTX(struct KISSINFO *KISS, PMESSAGE Buffer);
 int KHDLCRX(PHDLCDATA PORTVEC);
 void KHDLCTIMER(PHDLCDATA PORTVEC);
 void KHDLCCLOSE(PHDLCDATA PORTVEC);
@@ -632,8 +584,12 @@ BOOL KHDLCTXCHECK();
 
 #else
 
-extern VOID PC120INIT(), DRSIINIT(), TOSHINIT();
-extern VOID RLC100INIT(), BAYCOMINIT(), PA0INIT();
+extern VOID PC120INIT();
+extern VOID DRSIINIT();
+extern VOID TOSHINIT();
+extern VOID RLC100INIT();
+extern VOID BAYCOMINIT();
+extern VOID PA0INIT();
 
 extern VOID HDLCTX();
 extern VOID HDLCRX();
@@ -644,28 +600,71 @@ extern VOID HDLCTXCHECK();
 #endif
 
 extern VOID KISSINIT(), KISSTX(), KISSRX(), KISSTIMER(), KISSCLOSE();
-extern VOID EXTINIT(PEXTPORTDATA PORTVEC), EXTTX(PEXTPORTDATA PORTVEC, MESSAGE * Buffer), LINKRX(), EXTRX(PEXTPORTDATA PORTVEC);
+extern VOID EXTINIT(PEXTPORTDATA PORTVEC), EXTTX(PEXTPORTDATA PORTVEC, MESSAGE *Buffer), LINKRX(), EXTRX(PEXTPORTDATA PORTVEC);
 extern VOID LINKCLOSE(), EXTCLOSE() ,LINKTIMER(), EXTTIMER(PEXTPORTDATA PORTVEC);
 
-//	VECTORS TO HARDWARE DEPENDENT ROUTINES
 
-VOID * INITCODE[12] = {KISSINIT, PC120INIT, DRSIINIT, TOSHINIT, KISSINIT,
-RLC100INIT, RLC100INIT, LINKINIT, EXTINIT, BAYCOMINIT, PA0INIT, KISSINIT};
+// VECTORS TO HARDWARE DEPENDENT ROUTINES
 
-VOID * TXCODE[12] = {KISSTX, HDLCTX, HDLCTX, HDLCTX, KISSTX,
-					HDLCTX, HDLCTX, LINKTX, EXTTX, HDLCTX, HDLCTX, KISSTX};
+VOID *INITCODE[12] = {
+	KISSINIT,
+	PC120INIT,
+	DRSIINIT,
+	TOSHINIT,
+	KISSINIT,
+	RLC100INIT,
+	RLC100INIT,
+	LINKINIT,
+	EXTINIT,
+	BAYCOMINIT,
+	PA0INIT,
+	KISSINIT
+};
 
-VOID * RXCODE[12] = {KISSRX, HDLCRX, HDLCRX, HDLCRX, KISSRX,
-					HDLCRX, HDLCRX, LINKRX, EXTRX, HDLCRX, HDLCRX, KISSRX};
+VOID *TXCODE[12] = {
+	KISSTX,
+	HDLCTX,
+	HDLCTX,
+	HDLCTX,
+	KISSTX,
+	HDLCTX,
+	HDLCTX,
+	LINKTX,
+	EXTTX,
+	HDLCTX,
+	HDLCTX,
+	KISSTX
+};
 
-VOID * TIMERCODE[12] = {KISSTIMER, HDLCTIMER, HDLCTIMER, HDLCTIMER, KISSTIMER,
-					HDLCTIMER, HDLCTIMER, LINKTIMER, EXTTIMER, HDLCTIMER, HDLCTIMER, KISSTIMER};
+VOID *RXCODE[12] = {
+	KISSRX,
+	HDLCRX,
+	HDLCRX,
+	HDLCRX,
+	KISSRX,
+	HDLCRX,
+	HDLCRX,
+	LINKRX,
+	EXTRX,
+	HDLCRX,
+	HDLCRX,
+	KISSRX
+};
 
-VOID * CLOSECODE[12] = {KISSCLOSE, HDLCCLOSE, HDLCCLOSE, HDLCCLOSE, KISSCLOSE,
-					HDLCCLOSE, HDLCCLOSE, LINKCLOSE, EXTCLOSE, HDLCCLOSE, HDLCCLOSE, KISSCLOSE};
+VOID *TIMERCODE[12] = {
+	KISSTIMER, HDLCTIMER, HDLCTIMER, HDLCTIMER, KISSTIMER,
+	HDLCTIMER, HDLCTIMER, LINKTIMER, EXTTIMER, HDLCTIMER, HDLCTIMER, KISSTIMER
+};
 
-VOID * TXCHECKCODE[12] = {KISSTXCHECK, HDLCTXCHECK, HDLCTXCHECK, HDLCTXCHECK, KISSTXCHECK,
-					HDLCTXCHECK, HDLCTXCHECK, LINKTXCHECK, EXTTXCHECK, HDLCTXCHECK, HDLCTXCHECK, KISSTXCHECK};
+VOID *CLOSECODE[12] = {
+	KISSCLOSE, HDLCCLOSE, HDLCCLOSE, HDLCCLOSE, KISSCLOSE,
+	HDLCCLOSE, HDLCCLOSE, LINKCLOSE, EXTCLOSE, HDLCCLOSE, HDLCCLOSE, KISSCLOSE
+};
+
+VOID *TXCHECKCODE[12] = {
+	KISSTXCHECK, HDLCTXCHECK, HDLCTXCHECK, HDLCTXCHECK, KISSTXCHECK,
+	HDLCTXCHECK, HDLCTXCHECK, LINKTXCHECK, EXTTXCHECK, HDLCTXCHECK, HDLCTXCHECK, KISSTXCHECK
+};
 
 
 extern int BACKGROUND();
@@ -675,7 +674,7 @@ extern int L4SecTimer();
 extern int L3SecTimer();
 extern int StatsTimer();
 extern int COMMANDHANDLER();
-VOID SDETX(struct _LINKTABLE * LINK);
+VOID SDETX(struct _LINKTABLE *LINK);
 extern int L4BG();
 extern int L3BG();
 extern int TNCTimerProc();
@@ -683,34 +682,31 @@ extern int PROCESSIFRAME();
 
 int xxxxx = MAXDATA;
 
-BOOL Start()
-{
-	struct CONFIGTABLE * cfg = &xxcfg;
-	struct APPLCONFIG * ptr1;
-	struct PORTCONTROL * PORT;
-	struct FULLPORTDATA * FULLPORT;		// Including HW Data
-	struct FULLPORTDATA * NEXTPORT;		// Including HW Data
-	struct _EXTPORTDATA * EXTPORT;
-	APPLCALLS * APPL;
-	struct ROUTE * ROUTE;
-	struct DEST_LIST * DEST;
-	struct CMDX * CMD;
+
+BOOL Start() {
+	struct CONFIGTABLE *cfg = &xxcfg;
+	struct APPLCONFIG *ptr1;
+	struct PORTCONTROL *PORT;
+	struct FULLPORTDATA *FULLPORT;		// Including HW Data
+	struct FULLPORTDATA *NEXTPORT;		// Including HW Data
+	struct _EXTPORTDATA *EXTPORT;
+	APPLCALLS *APPL;
+	struct ROUTE *ROUTE;
+	struct DEST_LIST *DEST;
+	struct CMDX *CMD;
 	int PortSlot = 1;
 	uintptr_t int3;
 	int index = 0;						// Entry No. in ROUTES
-
-	unsigned char * ptr2 = 0, * ptr3, * ptr4;
-	USHORT * CWPTR;
+	unsigned char *ptr2 = 0, *ptr3, *ptr4;
+	USHORT *CWPTR;
 	int i, n;
-
-	struct ROUTECONFIG * Rcfg;
+	struct ROUTECONFIG *Rcfg;
 
 	NEXTFREEDATA = &DATAAREA[0];			// For Reinit
-	
+
 	memset(DATAAREA, 0, DATABYTES);
 
 	// Reinit everything in case of restart
-
 	FREE_Q = 0;
 	TRACE_Q = 0;
 	IDMSG_Q = 0;
@@ -744,25 +740,19 @@ BOOL Start()
 	if (cfg->C_MAXRTT)
 		MAXRTT = cfg->C_MAXRTT * 100;
 
-	if (cfg->C_NODE == 0 && cfg->C_BBS)
-	{
-		//	USE BBS CALL FOR NODE if Set, otherwise find first APPLCALL
-		//	Unless BBS also = 0
+	if (cfg->C_NODE == 0 && cfg->C_BBS) {
+		// USE BBS CALL FOR NODE if Set, otherwise find first APPLCALL
+		// Unless BBS also = 0
 
-		if (cfg->C_BBSCALL[0])
-		{
+		if (cfg->C_BBSCALL[0]) {
 			memcpy(MYNODECALL, cfg->C_BBSCALL, 10);
 			memcpy(MYALIASTEXT, cfg->C_BBSALIAS, 6);
 			memcpy(MYALIASLOPPED, cfg->C_BBSALIAS, 10);
-		}
-		else
-		{
+		} else {
 			ptr1 = &cfg->C_APPL[0];
-	
-			for (i = 0; i < NumberofAppls; i++)
-			{
-				if (ptr1->ApplCall[0] != ' ')
-				{
+
+			for (i = 0; i < NumberofAppls; i++) {
+				if (ptr1->ApplCall[0] != ' ') {
 					memcpy(MYNODECALL, &ptr1->ApplCall[0], 10);
 					memcpy(MYALIASTEXT, &ptr1->ApplAlias, 6);
 					memcpy(MYALIASLOPPED, &ptr1->ApplAlias, 10);
@@ -772,10 +762,7 @@ BOOL Start()
 				ptr1++;
 			}
 		}
-
-	}
-	else
-	{
+	} else {
 		memcpy(MYNODECALL, cfg->C_NODECALL, 10);
 		memcpy(MYALIASTEXT, cfg->C_NODEALIAS, 6);
 		memcpy(MYALIASLOPPED, cfg->C_NODEALIAS, 10);
@@ -783,28 +770,21 @@ BOOL Start()
 
 	strlop(MYALIASLOPPED, ' ');
 
-
-	//	IF NO BBS, SET BOTH TO _NODE CALLSIGN
-
-	if (cfg->C_BBS == 0)
-	{
+	// IF NO BBS, SET BOTH TO _NODE CALLSIGN
+	if (cfg->C_BBS == 0) {
 		memcpy(APPLCALLTABLE[0].APPLCALL_TEXT, cfg->C_NODECALL, 10);
 		memcpy(APPLCALLTABLE[0].APPLALIAS_TEXT, cfg->C_NODEALIAS, 10);
-	}
-	else
-	{
+	} else {
 		memcpy(APPLCALLTABLE[0].APPLCALL_TEXT, cfg->C_BBSCALL, 10);
 		memcpy(APPLCALLTABLE[0].APPLALIAS_TEXT, cfg->C_BBSALIAS, 10 );
 	}
 
 	BBSQUAL = cfg->C_BBSQUAL;
-	
-	//	copy MYCALL to NETROMCALL
 
+	// copy MYCALL to NETROMCALL
 	memcpy(MYNETROMCALL, MYNODECALL, 10);
-	
-	//	if NETROMCALL Defined, use it
 
+	// if NETROMCALL Defined, use it
 	if (cfg->C_NETROMCALL[0] && cfg->C_NETROMCALL[0] != ' ')
 		memcpy(MYNETROMCALL, cfg->C_NETROMCALL, 10);
 
@@ -816,20 +796,17 @@ BOOL Start()
 
 	APPLCALLTABLE[0].APPLQUAL = BBSQUAL;
 
-	if (cfg->C_WASUNPROTO == 0 && cfg->C_BTEXT)
-	{
-		char * ptr1 = &cfg->C_BTEXT[0];
-		char * ptr2 = BTHDDR.L2DATA;
+	if (cfg->C_WASUNPROTO == 0 && cfg->C_BTEXT) {
+		char *ptr1 = &cfg->C_BTEXT[0];
+		char *ptr2 = BTHDDR.L2DATA;
 		int len = 120;
 
 		BTHDDR.LENGTH = 1;			// PID
 
-		while ((*ptr1) && len--)
-		{
+		while ((*ptr1) && len--) {
 			*(ptr2++) = *(ptr1++);
 			BTHDDR.LENGTH ++;
 		}
-
 	}
 
 	OBSINIT = cfg->C_OBSINIT;
@@ -1199,12 +1176,12 @@ BOOL Start()
 
 		if (PortRec->KissParams && (PORT->PORTTYPE == 0 || PORT->PORTTYPE == 22))
 		{
-			struct KISSINFO * KISS = (struct KISSINFO *)PORT;
+			struct KISSINFO *KISS = (struct KISSINFO *)PORT;
 			UCHAR KissString[128];
 			int KissLen = 0;
-			unsigned char * Kissptr = KissString;
-			char * ptr;
-			char * Context;
+			unsigned char *Kissptr = KissString;
+			char *ptr;
+			char *Context;
 
 			ptr = strtok_s(PortRec->KissParams, " ", &Context);
 
@@ -1396,7 +1373,7 @@ BOOL Start()
 	while (Rcfg->call[0])
 	{
 		int FRACK;
-		char * VIA;
+		char *VIA;
 		char axcall[8];
 		
 
@@ -1666,7 +1643,7 @@ BOOL Start()
 
 	if (EnableOARCAPI)
 	{
-		struct hostent * HostEnt3;
+		struct hostent *HostEnt3;
 		HostEnt3 = gethostbyname(NodeAPIServer);
 
 		NodeAPISocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -1687,7 +1664,7 @@ BOOL Start()
 	return 0;
 }
 
-BOOL CompareCalls(UCHAR * c1, UCHAR * c2)
+BOOL CompareCalls(UCHAR *c1, UCHAR *c2)
 {
 	//	COMPARE AX25 CALLSIGNS IGNORING EXTRA BITS IN SSID
 
@@ -1699,7 +1676,7 @@ BOOL CompareCalls(UCHAR * c1, UCHAR * c2)
 
 	return FALSE;
 }
-BOOL CompareAliases(UCHAR * c1, UCHAR * c2)
+BOOL CompareAliases(UCHAR *c1, UCHAR *c2)
 {
 	//	COMPARE first 6 chars of AX25 CALLSIGNS
 
@@ -1708,10 +1685,10 @@ BOOL CompareAliases(UCHAR * c1, UCHAR * c2)
 
 	return TRUE;
 }
-BOOL FindNeighbour(UCHAR * Call, int Port, struct ROUTE ** REQROUTE)
+BOOL FindNeighbour(UCHAR *Call, int Port, struct ROUTE **REQROUTE)
 {
-	struct ROUTE * ROUTE = NEIGHBOURS;
-	struct ROUTE * FIRSTSPARE = NULL;
+	struct ROUTE *ROUTE = NEIGHBOURS;
+	struct ROUTE *FIRSTSPARE = NULL;
 	char Normcall[10];
 	int n;
 
@@ -1749,10 +1726,10 @@ BOOL FindNeighbour(UCHAR * Call, int Port, struct ROUTE ** REQROUTE)
 	return FALSE;
 }
 
-BOOL FindDestination(UCHAR * Call, struct DEST_LIST ** REQDEST)
+BOOL FindDestination(UCHAR *Call, struct DEST_LIST **REQDEST)
 {
-	struct DEST_LIST * DEST = DESTS;
-	struct DEST_LIST * FIRSTSPARE = NULL;
+	struct DEST_LIST *DEST = DESTS;
+	struct DEST_LIST *FIRSTSPARE = NULL;
 	int n = MAXDESTS;
 
 	while (n--)
@@ -1792,16 +1769,16 @@ VOID ReadMH()
 	FILE *fp;
 	char line[LINE_MAX];
 	UCHAR axcall[7];
-	char * ptr, *digi, *locptr, *locend;
-	char * Context, * Context2;
+	char *ptr, *digi, *locptr, *locend;
+	char *Context, *Context2;
 	char seps[] = " \n";
 	int Port;
-	struct PORTCONTROL * PORT = NULL;
-	MHSTRUC * MH;
+	struct PORTCONTROL *PORT = NULL;
+	MHSTRUC *MH;
 	int count = MHENTRIES;
-	char * Digiptr;
+	char *Digiptr;
 	BOOL Digiused;
-	char * HasStar;
+	char *HasStar;
 
 	// Set up pointer to BPQNODES file
 
@@ -1951,11 +1928,11 @@ VOID ReadNodes()
 	FILE *fp;
 	char line[LINE_MAX];
 	UCHAR axcall[7];
-	char * ptr;
-	char * Context;
+	char *ptr;
+	char *Context;
 	char seps[] = " \r";
 	int Port, Qual;
-	struct PORTCONTROL * PORT;
+	struct PORTCONTROL *PORT;
 
 	// Set up pointer to BPQNODES file
 
@@ -1983,7 +1960,7 @@ VOID ReadNodes()
 	{
 		if (memcmp(line, "ROUTE ADD", 9) == 0)
 		{
-			struct ROUTE * ROUTE = NULL;
+			struct ROUTE *ROUTE = NULL;
 
 			//	FORMAT IS ROUTE ADD CALLSIGN  PORT QUAL (VIA .... 
 
@@ -2112,9 +2089,9 @@ VOID ReadNodes()
 		{
 			//	FORMAT IS NODE ADD ALIAS:CALL ROUTE QUAL
 
-			dest_list * DEST = NULL;
-			struct ROUTE * ROUTE = NULL;
-			char * ALIAS;
+			dest_list *DEST = NULL;
+			struct ROUTE *ROUTE = NULL;
+			char *ALIAS;
 			char FULLALIAS[6] = "      ";
 			int SavedOBSINIT = OBSINIT;
 
@@ -2208,10 +2185,10 @@ int TIMERINTERRUPT()
 	int retval = 0;
 
 	int i;
-	struct PORTCONTROL * PORT = PORTTABLE;
+	struct PORTCONTROL *PORT = PORTTABLE;
 	PMESSAGE Buffer;
-	struct _LINKTABLE * LINK;
-	struct _MESSAGE * Message;
+	struct _LINKTABLE *LINK;
+	struct _MESSAGE *Message;
 	int toPort;
 
 	if (GetTickCount() - last100mSTickCount >= 100)
@@ -2377,8 +2354,8 @@ int TIMERINTERRUPT()
 			{
 				int Sessno = Message->PORT;
 				PEXTPORTDATA PORTVEC = (PEXTPORTDATA)PORT;
-				TRANSPORTENTRY * Session;
-				TRANSPORTENTRY * Partner;
+				TRANSPORTENTRY *Session;
+				TRANSPORTENTRY *Partner;
 
 				if (PORT->TNC && PORT->TNC->Hardware == H_KISSHF)
 				{
@@ -2467,8 +2444,8 @@ L2Packet:
 			{
 				if (BridgeMap[CURRENTPORT][toPort])
 				{
-					MESSAGE * BBuffer = GetBuff();
-					struct PORTCONTROL * BPORT;
+					MESSAGE *BBuffer = GetBuff();
+					struct PORTCONTROL *BPORT;
 
 					if (BBuffer)
 					{
@@ -2505,7 +2482,7 @@ L2Packet:
 		while (PORT->PORTTX_Q && Sent < 5)
 		{
 			int ret;
-			void * PACTORSAVEQ;
+			void *PACTORSAVEQ;
 
 			Buffer = PORT->PORTTX_Q;
 			Message = (struct _MESSAGE *) Buffer;
@@ -2516,7 +2493,7 @@ L2Packet:
 
 			if (ret == 1)
 			{
-				MESSAGE * Buffer = (PMESSAGE)Q_REM((void *)&PORT->PORTTX_Q);
+				MESSAGE *Buffer = (PMESSAGE)Q_REM((void *)&PORT->PORTTX_Q);
 
 				if (Buffer == 0)
 					break;						// WOT!!
@@ -2531,7 +2508,7 @@ L2Packet:
 
 			if (ret == 0)		// Not busy
 			{
-				MESSAGE * Buffer = (PMESSAGE)Q_REM((void *)&PORT->PORTTX_Q);
+				MESSAGE *Buffer = (PMESSAGE)Q_REM((void *)&PORT->PORTTX_Q);
 
 				if (Buffer == 0)
 					break;						// WOT!!
@@ -2698,7 +2675,7 @@ ENDOFLIST:
 
 }
 
-VOID DoListenMonitor(TRANSPORTENTRY * L4, MESSAGE * Msg)
+VOID DoListenMonitor(TRANSPORTENTRY *L4, MESSAGE *Msg)
 {
 	uint64_t SaveMMASK = MMASK;
 	BOOL SaveMTX = MTX;
@@ -2707,8 +2684,8 @@ VOID DoListenMonitor(TRANSPORTENTRY * L4, MESSAGE * Msg)
 	PDATAMESSAGE Buffer;
 	char MonBuffer[1024];
 	int len;
-	struct tm * TM;
-	UCHAR * monchars = (UCHAR *)Msg;
+	struct tm *TM;
+	UCHAR *monchars = (UCHAR *)Msg;
 
 	if (CountFramesQueuedOnSession(L4) > 10)
 		return;
@@ -2737,7 +2714,7 @@ VOID DoListenMonitor(TRANSPORTENTRY * L4, MESSAGE * Msg)
 
 	if (Buffer)
 	{
-		char * ptr = &Buffer->L2DATA[0];
+		char *ptr = &Buffer->L2DATA[0];
 		Buffer->PID = 0xf0;
 
 		memcpy(ptr, MonBuffer, len);
@@ -2750,7 +2727,7 @@ VOID DoListenMonitor(TRANSPORTENTRY * L4, MESSAGE * Msg)
 	}
 }
 
-DllExport int APIENTRY DllBPQTRACE(MESSAGE * Msg, BOOL TOAPRS)
+DllExport int APIENTRY DllBPQTRACE(MESSAGE *Msg, BOOL TOAPRS)
 {
 	int ret;
 	GetSemaphore(&Semaphore, 88);
@@ -2759,13 +2736,13 @@ DllExport int APIENTRY DllBPQTRACE(MESSAGE * Msg, BOOL TOAPRS)
 	return ret;
 }
 
-int BPQTRACE(MESSAGE * Msg, BOOL TOAPRS)
+int BPQTRACE(MESSAGE *Msg, BOOL TOAPRS)
 {
 	//	ATTACH A COPY OF FRAME TO ANY BPQ HOST PORTS WITH MONITORING ENABLED
 	
-	TRANSPORTENTRY * L4 = L4TABLE;
+	TRANSPORTENTRY *L4 = L4TABLE;
 
-	MESSAGE * Buffer;
+	MESSAGE *Buffer;
 	int i = BPQHOSTSTREAMS + 2;		// Include Telnet and AGW Stream
 
 	if (TOAPRS)
@@ -2831,8 +2808,8 @@ int BPQTRACE(MESSAGE * Msg, BOOL TOAPRS)
 VOID INITIALISEPORTS()
 {
 	char INITMSG[80];
-	struct PORTCONTROL * PORT = PORTTABLE;
-	struct PORTCONTROL * SAVEPORT;
+	struct PORTCONTROL *PORT = PORTTABLE;
+	struct PORTCONTROL *SAVEPORT;
 	
 	while (PORT)
 	{
@@ -2850,7 +2827,7 @@ VOID INITIALISEPORTS()
 
 			if (PORT->PORTTYPE == 0)
 			{
-				struct KISSINFO * KISS = (struct KISSINFO *)PORT;
+				struct KISSINFO *KISS = (struct KISSINFO *)PORT;
 				NPASYINFO Port;
 
 				if (KISS->FIRSTPORT && KISS->FIRSTPORT != KISS)
@@ -2886,7 +2863,7 @@ VOID INITIALISEPORTS()
 			{
 				if (PORT->PROTOCOL == 10)		// 'HF' Port
 				{
-					struct TNCINFO * TNC = TNCInfo[PORT->PORTNUMBER];
+					struct TNCINFO *TNC = TNCInfo[PORT->PORTNUMBER];
 
 					if (TNC && TNC->Hardware == H_TELNET)
 						PORT->isRF = 0;
@@ -2907,20 +2884,20 @@ VOID INITIALISEPORTS()
 
 VOID FindLostBuffers()
 {
-	void ** Buff;
+	void **Buff;
 	int n, i;
 	unsigned int rev;
 
 	UINT CodeDump[16];
 	char codeText[65] = "";
-	unsigned char * codeByte = (unsigned char *) CodeDump;
+	unsigned char *codeByte = (unsigned char *) CodeDump;
 
 	PBPQVECSTRUC HOSTSESS = BPQHOSTVECTOR;
-	struct _TRANSPORTENTRY * L4;	// Pointer to Session
+	struct _TRANSPORTENTRY *L4;	// Pointer to Session
 	
-	struct DEST_LIST * DEST = DESTS;
+	struct DEST_LIST *DEST = DESTS;
 
-	struct ROUTE * Routes = NEIGHBOURS;
+	struct ROUTE *Routes = NEIGHBOURS;
 	int MaxRoutes = MAXNEIGHBOURS;
 	int Queued;
 	char Call[10]; 
@@ -3032,8 +3009,8 @@ VOID FindLostBuffers()
 	{
 		if (Bufferlist[n])
 		{
-			char * fileptr = (char *)Bufferlist[n];
-			MESSAGE * Msg = (MESSAGE *)Bufferlist[n];
+			char *fileptr = (char *)Bufferlist[n];
+			MESSAGE *Msg = (MESSAGE *)Bufferlist[n];
 
 			memcpy(CodeDump, Bufferlist[n], 64);
 	
@@ -3076,12 +3053,12 @@ VOID FindLostBuffers()
 	}
 }
 
-void WriteConnectLog(char * fromCall, char * toCall, UCHAR * Mode)
+void WriteConnectLog(char *fromCall, char *toCall, UCHAR *Mode)
 {
 	UCHAR FN[MAX_PATH];
-	FILE * LogHandle;
+	FILE *LogHandle;
 	time_t T;
-	struct tm * tm;
+	struct tm *tm;
 	char LogMsg[256];	
 	int MsgLen;
 

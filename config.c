@@ -293,106 +293,102 @@ char option[250];
 /*      STATIC VARIABLES                                                */
 /************************************************************************/
 
-static char *keywords[] = 
-{
-"OBSINIT", "OBSMIN", "NODESINTERVAL", "L3TIMETOLIVE", "L4RETRIES", "L4TIMEOUT",
-"BUFFERS", "PACLEN", "TRANSDELAY", "T3", "IDLETIME", "BBS",
-"NODE", "NODEALIAS", "BBSALIAS", "NODECALL", "BBSCALL",
-"TNCPORT", "IDMSG:", "INFOMSG:", "ROUTES:", "PORT",  "MAXLINKS",
-"MAXNODES", "MAXROUTES", "MAXCIRCUITS", "IDINTERVAL", "MINQUAL",
-"HIDENODES", "L4DELAY", "L4WINDOW", "BTINTERVAL", "UNPROTO", "BBSQUAL",
-"APPLICATIONS", "EMS", "CTEXT:", "DESQVIEW", "HOSTINTERRUPT", "ENABLE_LINKED",
-"XXDEDHOST", "FULL_CTEXT", "SIMPLE", "AUTOSAVE" , "L4APPL",
-"APPL1CALL", "APPL2CALL", "APPL3CALL", "APPL4CALL",
-"APPL5CALL", "APPL6CALL", "APPL7CALL", "APPL8CALL",
-"APPL1ALIAS", "APPL2ALIAS", "APPL3ALIAS", "APPL4ALIAS",
-"APPL5ALIAS", "APPL6ALIAS", "APPL7ALIAS", "APPL8ALIAS",
-"APPL1QUAL", "APPL2QUAL", "APPL3QUAL", "APPL4QUAL",
-"APPL5QUAL", "APPL6QUAL", "APPL7QUAL", "APPL8QUAL",
+static char *keywords[] = {
+	"OBSINIT", "OBSMIN", "NODESINTERVAL", "L3TIMETOLIVE", "L4RETRIES", "L4TIMEOUT",
+	"BUFFERS", "PACLEN", "TRANSDELAY", "T3", "IDLETIME", "BBS",
+	"NODE", "NODEALIAS", "BBSALIAS", "NODECALL", "BBSCALL",
+	"TNCPORT", "IDMSG:", "INFOMSG:", "ROUTES:", "PORT",  "MAXLINKS",
+	"MAXNODES", "MAXROUTES", "MAXCIRCUITS", "IDINTERVAL", "MINQUAL",
+	"HIDENODES", "L4DELAY", "L4WINDOW", "BTINTERVAL", "UNPROTO", "BBSQUAL",
+	"APPLICATIONS", "EMS", "CTEXT:", "DESQVIEW", "HOSTINTERRUPT", "ENABLE_LINKED",
+	"XXDEDHOST", "FULL_CTEXT", "SIMPLE", "AUTOSAVE" , "L4APPL",
+	"APPL1CALL", "APPL2CALL", "APPL3CALL", "APPL4CALL",
+	"APPL5CALL", "APPL6CALL", "APPL7CALL", "APPL8CALL",
+	"APPL1ALIAS", "APPL2ALIAS", "APPL3ALIAS", "APPL4ALIAS",
+	"APPL5ALIAS", "APPL6ALIAS", "APPL7ALIAS", "APPL8ALIAS",
+	"APPL1QUAL", "APPL2QUAL", "APPL3QUAL", "APPL4QUAL",
+	"APPL5QUAL", "APPL6QUAL", "APPL7QUAL", "APPL8QUAL",
 
-"BTEXT:", "NETROMCALL", "C_IS_CHAT", "MAXRTT", "MAXTT", "MAXHOPS",		// IPGATEWAY= no longer allowed
-"LogL4Connects", "LogAllConnects", "SAVEMH", "ENABLEADIFLOG", "ENABLEEVENTS", "SAVEAPRSMSGS", 
-"EnableM0LTEMap", "MQTT", "MQTT_HOST", "MQTT_PORT", "MQTT_USER", "MQTT_PASS",
-"L4Compress", "L4CompMaxframe", "L4CompPaclen", "L2Compress", "L2CompMaxframe",
-"L2CompPaclen", "PREFERINP3ROUTES", "OnlyVer2point0", "DEBUGINP3", "ENABLEOARCAPI", "MONTOFILE",
-"RIFInterval", "LOCALNOTSECURE"
-
+	"BTEXT:", "NETROMCALL", "C_IS_CHAT", "MAXRTT", "MAXTT", "MAXHOPS",		// IPGATEWAY= no longer allowed
+	"LogL4Connects", "LogAllConnects", "SAVEMH", "ENABLEADIFLOG", "ENABLEEVENTS", "SAVEAPRSMSGS", 
+	"EnableM0LTEMap", "MQTT", "MQTT_HOST", "MQTT_PORT", "MQTT_USER", "MQTT_PASS",
+	"L4Compress", "L4CompMaxframe", "L4CompPaclen", "L2Compress", "L2CompMaxframe",
+	"L2CompPaclen", "PREFERINP3ROUTES", "OnlyVer2point0", "DEBUGINP3", "ENABLEOARCAPI", "MONTOFILE",
+	"RIFInterval", "LOCALNOTSECURE"
 };           /* parameter keywords */
 
-static void * offset[] =
-{
-&xxcfg.C_OBSINIT, &xxcfg.C_OBSMIN, &xxcfg.C_NODESINTERVAL, &xxcfg.C_L3TIMETOLIVE, &xxcfg.C_L4RETRIES, &xxcfg.C_L4TIMEOUT,
-&xxcfg.C_BUFFERS, &xxcfg.C_PACLEN, &xxcfg.C_TRANSDELAY, &xxcfg.C_T3, &xxcfg.C_IDLETIME, &xxcfg.C_BBS,
-&xxcfg.C_NODE, &xxcfg.C_NODEALIAS, &xxcfg.C_BBSALIAS, &xxcfg.C_NODECALL, &xxcfg.C_BBSCALL,
-0, &xxcfg.C_IDMSG, &xxcfg.C_INFOMSG, &xxcfg.C_ROUTE, &xxcfg.C_PORT, &xxcfg.C_MAXLINKS,
-&xxcfg.C_MAXDESTS, &xxcfg.C_MAXNEIGHBOURS, &xxcfg.C_MAXCIRCUITS, &xxcfg.C_IDINTERVAL, &xxcfg.C_MINQUAL,
-&xxcfg.C_HIDENODES, &xxcfg.C_L4DELAY, &xxcfg.C_L4WINDOW, &xxcfg.C_BTINTERVAL, &xxcfg.C_WASUNPROTO, &xxcfg.C_BBSQUAL,
-&xxcfg.C_APPL, &xxcfg.C_EMSFLAG, &xxcfg.C_CTEXT , &xxcfg.C_DESQVIEW, &xxcfg.C_HOSTINTERRUPT, &xxcfg.C_LINKEDFLAG,
-0, &xxcfg.C_FULLCTEXT, 0, &xxcfg.C_AUTOSAVE, &xxcfg.C_L4APPL,
-&xxcfg.C_APPL[0].ApplCall, &xxcfg.C_APPL[1].ApplCall, &xxcfg.C_APPL[2].ApplCall, &xxcfg.C_APPL[3].ApplCall,
-&xxcfg.C_APPL[4].ApplCall, &xxcfg.C_APPL[5].ApplCall, &xxcfg.C_APPL[6].ApplCall, &xxcfg.C_APPL[7].ApplCall,
-&xxcfg.C_APPL[0].ApplAlias, &xxcfg.C_APPL[1].ApplAlias, &xxcfg.C_APPL[2].ApplAlias, &xxcfg.C_APPL[3].ApplAlias,
-&xxcfg.C_APPL[4].ApplAlias, &xxcfg.C_APPL[5].ApplAlias, &xxcfg.C_APPL[6].ApplAlias, &xxcfg.C_APPL[7].ApplAlias,
-&xxcfg.C_APPL[0].ApplQual, &xxcfg.C_APPL[1].ApplQual, &xxcfg.C_APPL[2].ApplQual, &xxcfg.C_APPL[3].ApplQual,
-&xxcfg.C_APPL[4].ApplQual, &xxcfg.C_APPL[5].ApplQual, &xxcfg.C_APPL[6].ApplQual, &xxcfg.C_APPL[7].ApplQual,
+static void *offset[] = {
+	&xxcfg.C_OBSINIT, &xxcfg.C_OBSMIN, &xxcfg.C_NODESINTERVAL, &xxcfg.C_L3TIMETOLIVE, &xxcfg.C_L4RETRIES, &xxcfg.C_L4TIMEOUT,
+	&xxcfg.C_BUFFERS, &xxcfg.C_PACLEN, &xxcfg.C_TRANSDELAY, &xxcfg.C_T3, &xxcfg.C_IDLETIME, &xxcfg.C_BBS,
+	&xxcfg.C_NODE, &xxcfg.C_NODEALIAS, &xxcfg.C_BBSALIAS, &xxcfg.C_NODECALL, &xxcfg.C_BBSCALL,
+	0, &xxcfg.C_IDMSG, &xxcfg.C_INFOMSG, &xxcfg.C_ROUTE, &xxcfg.C_PORT, &xxcfg.C_MAXLINKS,
+	&xxcfg.C_MAXDESTS, &xxcfg.C_MAXNEIGHBOURS, &xxcfg.C_MAXCIRCUITS, &xxcfg.C_IDINTERVAL, &xxcfg.C_MINQUAL,
+	&xxcfg.C_HIDENODES, &xxcfg.C_L4DELAY, &xxcfg.C_L4WINDOW, &xxcfg.C_BTINTERVAL, &xxcfg.C_WASUNPROTO, &xxcfg.C_BBSQUAL,
+	&xxcfg.C_APPL, &xxcfg.C_EMSFLAG, &xxcfg.C_CTEXT , &xxcfg.C_DESQVIEW, &xxcfg.C_HOSTINTERRUPT, &xxcfg.C_LINKEDFLAG,
+	0, &xxcfg.C_FULLCTEXT, 0, &xxcfg.C_AUTOSAVE, &xxcfg.C_L4APPL,
+	&xxcfg.C_APPL[0].ApplCall, &xxcfg.C_APPL[1].ApplCall, &xxcfg.C_APPL[2].ApplCall, &xxcfg.C_APPL[3].ApplCall,
+	&xxcfg.C_APPL[4].ApplCall, &xxcfg.C_APPL[5].ApplCall, &xxcfg.C_APPL[6].ApplCall, &xxcfg.C_APPL[7].ApplCall,
+	&xxcfg.C_APPL[0].ApplAlias, &xxcfg.C_APPL[1].ApplAlias, &xxcfg.C_APPL[2].ApplAlias, &xxcfg.C_APPL[3].ApplAlias,
+	&xxcfg.C_APPL[4].ApplAlias, &xxcfg.C_APPL[5].ApplAlias, &xxcfg.C_APPL[6].ApplAlias, &xxcfg.C_APPL[7].ApplAlias,
+	&xxcfg.C_APPL[0].ApplQual, &xxcfg.C_APPL[1].ApplQual, &xxcfg.C_APPL[2].ApplQual, &xxcfg.C_APPL[3].ApplQual,
+	&xxcfg.C_APPL[4].ApplQual, &xxcfg.C_APPL[5].ApplQual, &xxcfg.C_APPL[6].ApplQual, &xxcfg.C_APPL[7].ApplQual,
 
-&xxcfg.C_BTEXT, &xxcfg.C_NETROMCALL, &xxcfg.C_C, &xxcfg.C_MAXRTT, &xxcfg.C_MAXRTT, &xxcfg.C_MAXHOPS,		// IPGATEWAY= no longer allowed
-&xxcfg.C_LogL4Connects, &xxcfg.C_LogAllConnects, &xxcfg.C_SaveMH, &xxcfg.C_ADIF, &xxcfg.C_EVENTS, &xxcfg.C_SaveAPRSMsgs,
-&xxcfg.C_M0LTEMap, &xxcfg.C_MQTT, &xxcfg.C_MQTT_HOST, &xxcfg.C_MQTT_PORT, &xxcfg.C_MQTT_USER, &xxcfg.C_MQTT_PASS,
-&xxcfg.C_L4Compress, &xxcfg.C_L4CompMaxframe, &xxcfg.C_L4CompPaclen, &xxcfg.C_L2Compress, &xxcfg.C_L2CompMaxframe, 
-&xxcfg.C_L2CompPaclen, &xxcfg.C_PREFERINP3ROUTES, &xxcfg.C_OnlyVer2point0,  &xxcfg.C_DEBUGINP3, &xxcfg.C_OARCAPI, &xxcfg.C_MONTOFILE,
-&xxcfg.C_RIFInterval, &xxcfg.C_LOCALNOTSECURE		/* offset for corresponding data in config file */
+	&xxcfg.C_BTEXT, &xxcfg.C_NETROMCALL, &xxcfg.C_C, &xxcfg.C_MAXRTT, &xxcfg.C_MAXRTT, &xxcfg.C_MAXHOPS,		// IPGATEWAY= no longer allowed
+	&xxcfg.C_LogL4Connects, &xxcfg.C_LogAllConnects, &xxcfg.C_SaveMH, &xxcfg.C_ADIF, &xxcfg.C_EVENTS, &xxcfg.C_SaveAPRSMsgs,
+	&xxcfg.C_M0LTEMap, &xxcfg.C_MQTT, &xxcfg.C_MQTT_HOST, &xxcfg.C_MQTT_PORT, &xxcfg.C_MQTT_USER, &xxcfg.C_MQTT_PASS,
+	&xxcfg.C_L4Compress, &xxcfg.C_L4CompMaxframe, &xxcfg.C_L4CompPaclen, &xxcfg.C_L2Compress, &xxcfg.C_L2CompMaxframe, 
+	&xxcfg.C_L2CompPaclen, &xxcfg.C_PREFERINP3ROUTES, &xxcfg.C_OnlyVer2point0,  &xxcfg.C_DEBUGINP3, &xxcfg.C_OARCAPI, &xxcfg.C_MONTOFILE,
+	&xxcfg.C_RIFInterval, &xxcfg.C_LOCALNOTSECURE		/* offset for corresponding data in config file */
 };
 
-static int routine[] = 
-{
-1, 1, 1, 1, 1, 1,
-1, 1, 1, 1, 1, 2,
-2, 0, 0, 0, 0,
-3, 4, 20, 5, 6, 1,
-1, 1, 1, 1, 1,
-2, 1, 1, 1, 7, 1,
-8, 2, 4, 2, 9, 10,
-11, 1, 12, 2 , 1,
-13, 13, 13, 13,
-13, 13 ,13, 13,
-13, 13, 13, 13,
-13, 13 ,13, 13,
-14, 14, 14, 14,
-14, 14 ,14, 14,
+static int routine[] = {
+	1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 2,
+	2, 0, 0, 0, 0,
+	3, 4, 20, 5, 6, 1,
+	1, 1, 1, 1, 1,
+	2, 1, 1, 1, 7, 1,
+	8, 2, 4, 2, 9, 10,
+	11, 1, 12, 2 , 1,
+	13, 13, 13, 13,
+	13, 13 ,13, 13,
+	13, 13, 13, 13,
+	13, 13 ,13, 13,
+	14, 14, 14, 14,
+	14, 14 ,14, 14,
 
-15, 0, 2, 9, 9, 9,
-2, 2, 1, 2, 2, 2,
-2, 2, 0, 1, 20, 20,
-1, 1, 1, 1, 1, 
-1, 1, 1, 1, 1, 1,
-1, 1};			// Routine to process param
+	15, 0, 2, 9, 9, 9,
+	2, 2, 1, 2, 2, 2,
+	2, 2, 0, 1, 20, 20,
+	1, 1, 1, 1, 1, 
+	1, 1, 1, 1, 1, 1,
+	1, 1
+};			// Routine to process param
 
-int PARAMLIM = sizeof(routine)/sizeof(int);
-//int NUMBEROFKEYWORDS = sizeof(routine)/sizeof(int);
+int PARAMLIM = sizeof(routine) / sizeof(int);
+//int NUMBEROFKEYWORDS = sizeof(routine) / sizeof(int);
 
 //#define PARAMLIM 74
 
 
 static char eof_message[] = "Unexpected end of file on input\n";
 
-static char *pkeywords[] = 
-{
-"ID", "TYPE", "PROTOCOL", "IOADDR", "INTLEVEL", "SPEED", "CHANNEL",
-"BBSFLAG", "QUALITY", "MAXFRAME", "TXDELAY", "SLOTTIME", "PERSIST",
-"FULLDUP", "SOFTDCD", "FRACK", "RESPTIME", "RETRIES",
-"PACLEN", "CWID", "PORTCALL", "PORTALIAS", "ENDPORT", "VALIDCALLS",
-"QUALADJUST", "DIGIFLAG", "DIGIPORT", "USERS" ,"UNPROTO", "PORTNUM",
-"TXTAIL", "ALIAS_IS_BBS", "L3ONLY", "KISSOPTIONS", "INTERLOCK", "NODESPACLEN",
-"TXPORT", "MHEARD", "CWIDTYPE", "MINQUAL", "MAXDIGIS", "PORTALIAS2", "DLLNAME",
-"BCALL", "DIGIMASK", "NOKEEPALIVES", "COMPORT", "DRIVER", "WL2KREPORT", "UIONLY",
-"UDPPORT", "IPADDR", "I2CBUS", "I2CDEVICE", "UDPTXPORT", "UDPRXPORT", "NONORMALIZE",
-"IGNOREUNLOCKEDROUTES", "INP3ONLY", "TCPPORT", "RIGPORT", "PERMITTEDAPPLS", "HIDE",
-"SMARTID", "KISSCOMMAND", "SendtoM0LTEMap", "PortFreq", "M0LTEMapInfo", "QTSMPort", 
-"ALLOWINP3", "ENABLEINP3", "isRF", "FREQ", "BW", "SF", "CR"};         /* parameter keywords */
+static char *pkeywords[] =  {
+	"ID", "TYPE", "PROTOCOL", "IOADDR", "INTLEVEL", "SPEED", "CHANNEL",
+	"BBSFLAG", "QUALITY", "MAXFRAME", "TXDELAY", "SLOTTIME", "PERSIST",
+	"FULLDUP", "SOFTDCD", "FRACK", "RESPTIME", "RETRIES",
+	"PACLEN", "CWID", "PORTCALL", "PORTALIAS", "ENDPORT", "VALIDCALLS",
+	"QUALADJUST", "DIGIFLAG", "DIGIPORT", "USERS" ,"UNPROTO", "PORTNUM",
+	"TXTAIL", "ALIAS_IS_BBS", "L3ONLY", "KISSOPTIONS", "INTERLOCK", "NODESPACLEN",
+	"TXPORT", "MHEARD", "CWIDTYPE", "MINQUAL", "MAXDIGIS", "PORTALIAS2", "DLLNAME",
+	"BCALL", "DIGIMASK", "NOKEEPALIVES", "COMPORT", "DRIVER", "WL2KREPORT", "UIONLY",
+	"UDPPORT", "IPADDR", "I2CBUS", "I2CDEVICE", "UDPTXPORT", "UDPRXPORT", "NONORMALIZE",
+	"IGNOREUNLOCKEDROUTES", "INP3ONLY", "TCPPORT", "RIGPORT", "PERMITTEDAPPLS", "HIDE",
+	"SMARTID", "KISSCOMMAND", "SendtoM0LTEMap", "PortFreq", "M0LTEMapInfo", "QTSMPort", 
+	"ALLOWINP3", "ENABLEINP3", "isRF", "FREQ", "BW", "SF", "CR"
+};         /* parameter keywords */
 
-static void * poffset[] =
-{
+static void *poffset[] = {
 &xxp.ID, &xxp.TYPE, &xxp.PROTOCOL, &xxp.IOADDR, &xxp.INTLEVEL, &xxp.SPEED, &xxp.CHANNEL,
 &xxp.BBSFLAG, &xxp.QUALITY, &xxp.MAXFRAME, &xxp.TXDELAY, &xxp.SLOTTIME, &xxp.PERSIST,
 &xxp.FULLDUP, &xxp.SOFTDCD, &xxp.FRACK, &xxp.RESPTIME, &xxp.RETRIES,

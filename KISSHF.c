@@ -72,24 +72,24 @@ extern int SemHeldByAPI;
 
 static RECT Rect;
 
-static int ProcessLine(char * buf, int Port);
+static int ProcessLine(char *buf, int Port);
 
-VOID WritetoTrace(struct TNCINFO * TNC, char * Msg, int Len);
+VOID WritetoTrace(struct TNCINFO *TNC, char *Msg, int Len);
 
 #define	FEND	0xC0	// KISS CONTROL CODES 
 #define	FESC	0xDB
 #define	TFEND	0xDC
 #define	TFESC	0xDD
 
-static int ProcessLine(char * buf, int Port)
-{
-	UCHAR * ptr,* p_cmd;
-	char * p_ipad = 0;
-	char * p_port = 0;
+
+static int ProcessLine(char *buf, int Port) {
+	UCHAR *ptr, *p_cmd;
+	char *p_ipad = 0;
+	char *p_port = 0;
 	unsigned short WINMORport = 0;
 	int BPQport;
-	int len=510;
-	struct TNCINFO * TNC;
+	int len = 510;
+	struct TNCINFO *TNC;
 	char errbuf[256];
 
 	strcpy(errbuf, buf);
@@ -1607,8 +1607,4 @@ void KISSHFConnected(struct PORTCONTROL * PORT, struct _LINKTABLE * LINK)
 		MySetWindowText(TNC, TNC->xIDC_TNCSTATE, TNC->WEB_TNCSTATE);
 	}
 }
-
-
-
-
-
+s

@@ -248,10 +248,8 @@ struct NETROMX SERVICES[] = {
 int NUMBEROFSSERVICES = sizeof(SERVICES)/sizeof(struct NETROMX);
 
 
-char * __cdecl Cmdprintf(TRANSPORTENTRY *Session, char *Bufferptr, const char *format, ...)
-{
+char *__cdecl Cmdprintf(TRANSPORTENTRY *Session, char *Bufferptr, const char *format, ...) {
 	// Send Command response checking PACLEN
-
 	char Mess[4096];
 	va_list(arglist);
 	int OldLen;
@@ -269,10 +267,8 @@ char * __cdecl Cmdprintf(TRANSPORTENTRY *Session, char *Bufferptr, const char *f
 
 	OldLen = (int)(Bufferptr - (char *)REPLYBUFFER->L2DATA);
 
-	while ((OldLen + MsgLen) > Paclen)
-	{
+	while ((OldLen + MsgLen) > Paclen) {
 		// Have to send Paclen then get a new buffer
-
 		int ThisBit = Paclen - OldLen;		// What we can send this time
 
 		if (ThisBit < 0)
@@ -283,13 +279,10 @@ char * __cdecl Cmdprintf(TRANSPORTENTRY *Session, char *Bufferptr, const char *f
 		MsgLen -= ThisBit;
 
 		// QUEUE IT AND GET ANOTHER BUFFER
-
-		Buffer = (struct DATAMESSAGE *)GetBuff();
+		Buffer = (struct DATAMESSAGE*)GetBuff();
 
 		if (Buffer == NULL)
-
 			// No buffers, so just reuse the old one (better than crashing !!)
-
 			Buffer = REPLYBUFFER;
 		else
 			SendCommandReply(Session, REPLYBUFFER, Paclen + (4 + sizeof(void *)));
@@ -303,14 +296,12 @@ char * __cdecl Cmdprintf(TRANSPORTENTRY *Session, char *Bufferptr, const char *f
 	}
 
 	// Add last bit to buffer
-
 	memcpy(Bufferptr, Messptr, MsgLen);
 
 	return Bufferptr + MsgLen;
 }
 
-VOID POLLNODES(TRANSPORTENTRY *Session, char *Bufferptr, char *CmdTail, struct CMDX *CMD)
-{
+VOID POLLNODES(TRANSPORTENTRY *Session, char *Bufferptr, char *CmdTail, struct CMDX *CMD) {
 	int Portnum = atoi(CmdTail);
 	struct PORTCONTROL *PORT = 0;
 	MESSAGE *Buffer;
@@ -1703,33 +1694,27 @@ CMDS60:
 	SendCommandReply(Session, REPLYBUFFER, (int)(Bufferptr - (char *)REPLYBUFFER));
 }
 
-extern int MasterPort[MAXBPQPORTS+1];	// Pointer to first BPQ port for a specific MPSK or UZ7HO host
+extern int MasterPort[MAXBPQPORTS + 1];	// Pointer to first BPQ port for a specific MPSK or UZ7HO host
 
-VOID CMDP00(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, struct CMDX * CMD)
-{
+VOID CMDP00(TRANSPORTENTRY *Session, char *Bufferptr, char *CmdTail, struct CMDX *CMD) {
 	// Process PORTS Message
-
 	// If extended show state of TNC (Open, Active, etc)
-
-	struct PORTCONTROL * PORT = PORTTABLE;
+	struct PORTCONTROL *PORT = PORTTABLE;
 	char Extended = CmdTail[0];
-	struct PORTCONTROL * SAVEPORT;
+	struct PORTCONTROL *SAVEPORT;
 
 	Bufferptr = Cmdprintf(Session, Bufferptr, "Ports\r");
 
-	while (PORT)
-	{
+	while (PORT) {
 		char Status[32] = "???????";
 		int Portno = PORT->PORTNUMBER;
 
-		if (PORT->Hide) 
-		{
+		if (PORT->Hide) {
 			PORT = PORT->PORTPOINTER;
 			continue;
 		}
 
-		if (Extended != 'E')
-		{
+		if (Extended != 'E') {
 			Bufferptr = Cmdprintf(Session, Bufferptr, " %2d %s\r", PORT->PORTNUMBER, PORT->PORTDESCRIPTION);
 
 			PORT = PORT->PORTPOINTER;
@@ -1754,26 +1739,19 @@ VOID CMDP00(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, struct C
 
 			SAVEPORT = PORT;
 
-			if (KISS->FIRSTPORT && KISS->FIRSTPORT != KISS)
-			{
+			if (KISS->FIRSTPORT && KISS->FIRSTPORT != KISS) {
 				// Not first port on device
-
-				PORT = (struct PORTCONTROL *)KISS->FIRSTPORT;
+				PORT = (struct PORTCONTROL*)KISS->FIRSTPORT;
 				Port = KISSInfo[Portno];
 			}
 
 			Port = KISSInfo[PORT->PORTNUMBER];
 
-			if (Port)
-			{
-				// KISS like - see if connected 
-
-				if (PORT->PORTIPADDR.s_addr || PORT->KISSSLAVE)
-				{
+			if (Port) {
+				// KISS like - see if connected
+				if (PORT->PORTIPADDR.s_addr || PORT->KISSSLAVE) {
 					// KISS over UDP or TCP
-
-					if (PORT->KISSTCP)
-					{
+					if (PORT->KISSTCP) {
 						if (Port->Connected)
 							strcpy(Status, "Open  ");
 						else
@@ -1781,103 +1759,84 @@ VOID CMDP00(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, struct C
 								strcpy(Status, "Listen");
 							else
 								strcpy(Status, "Closed");
-					}
-					else
+					} else {
 						strcpy(Status, "UDP");
-				}
-				else
+					}
+				} else {
 					if (Port->idComDev)			// Serial port Open
 						strcpy(Status, "Open  ");
 					else
 						strcpy(Status, "Closed");
+				}
 
 				PORT = SAVEPORT;
-			}		
-		}
-		else if (PORT->PORTTYPE == 14)		// Loopback 
+			}
+		} else if (PORT->PORTTYPE == 14)		// Loopback 
 			strcpy(Status, "Open  ");
+		else if (PORT->PORTTYPE == 16) {		// External
+			if (PORT->PROTOCOL == 10) {			// 'HF' Port
+				struct TNCINFO *TNC = TNCInfo[Portno];
 
-		else if (PORT->PORTTYPE == 16)		// External
-		{
-			if (PORT->PROTOCOL == 10)		// 'HF' Port
-			{
-				struct TNCINFO * TNC = TNCInfo[Portno];
-
-				if (TNC == NULL)
-				{
+				if (TNC == NULL) {
 					PORT = PORT->PORTPOINTER;
 					continue;
 				}
 
-				switch (TNC->Hardware)				// Hardware Type
-				{
-				case H_SCS:
-				case H_KAM:
-				case H_AEA:
-				case H_HAL:
-				case H_TRK:
-				case H_SERIAL:
-
-					// Serial
-
-					if (TNC->hDevice)
-						strcpy(Status, "Open  ");
-					else
-						strcpy(Status, "Closed");
-
-					break;
-
-				case H_UZ7HO:
-
-					if (TNCInfo[MasterPort[Portno]]->CONNECTED)
-						strcpy(Status, "Open  ");
-					else
-						strcpy(Status, "Closed");
-
-					break;
-
-				case H_WINMOR:
-				case H_V4:
-
-				case H_MPSK:
-				case H_FLDIGI:
-				case H_UIARQ:
-				case H_ARDOP:
-				case H_VARA:
-				case H_KISSHF:
-				case H_WINRPR:
-				case H_FREEDATA:
-
-					// TCP
-
-					if (TNC->CONNECTED)
-					{
-						if (TNC->Streams[0].Attached)
-							strcpy(Status, "In Use");
-						else
+				switch (TNC->Hardware) {				// Hardware Type
+					case H_SCS:
+					case H_KAM:
+					case H_AEA:
+					case H_HAL:
+					case H_TRK:
+					case H_SERIAL:
+						// Serial
+						if (TNC->hDevice)
 							strcpy(Status, "Open  ");
-					}
-					else
-						strcpy(Status, "Closed");
+						else
+							strcpy(Status, "Closed");
 
-					break;
+						break;
 
-				case H_TELNET:
+					case H_UZ7HO:
+						if (TNCInfo[MasterPort[Portno]]->CONNECTED)
+							strcpy(Status, "Open  ");
+						else
+							strcpy(Status, "Closed");
 
-					strcpy(Status, "Open  ");
+						break;
+
+					case H_WINMOR:
+					case H_V4:
+					case H_MPSK:
+					case H_FLDIGI:
+					case H_UIARQ:
+					case H_ARDOP:
+					case H_VARA:
+					case H_KISSHF:
+					case H_WINRPR:
+					case H_FREEDATA:
+						// TCP
+						if (TNC->CONNECTED) {
+							if (TNC->Streams[0].Attached)
+								strcpy(Status, "In Use");
+							else
+								strcpy(Status, "Open  ");
+						} else {
+							strcpy(Status, "Closed");
+						}
+						break;
+
+					case H_TELNET:
+						strcpy(Status, "Open  ");
 				}
-			}
-			else
-			{
+			} else {
 				// External but not HF - AXIP, BPQETHER VKISS, ??
-
-				struct _EXTPORTDATA * EXTPORT = (struct _EXTPORTDATA *)PORT;
-
+				struct _EXTPORTDATA *EXTPORT = (struct _EXTPORTDATA*)PORT;
 				strcpy(Status, "Open  ");
 			}
 		}
 
-			Bufferptr = Cmdprintf(Session, Bufferptr, " %2d %-7s %s\r", PORT->PORTNUMBER, Status, PORT->PORTDESCRIPTION);
+		Bufferptr = Cmdprintf(Session, Bufferptr, " %2d %-7s %s\r", PORT->PORTNUMBER, Status, PORT->PORTDESCRIPTION);
 
 		PORT = PORT->PORTPOINTER;
 	}
@@ -4890,24 +4849,22 @@ struct CMDX COMMANDS[] =
 	"..FLMSG     ",7,FLMSG,0
 };
 
-struct CMDX * CMD = NULL;
+struct CMDX *CMD = NULL;
 
 int NUMBEROFCOMMANDS = sizeof(COMMANDS)/sizeof(struct CMDX);
 
-char * ReplyPointer;			// Pointer into reply buffer
+char *ReplyPointer;			// Pointer into reply buffer
 
-int DecodeNodeName(char * NodeName, char * ptr)
-{
+int DecodeNodeName(char *NodeName, char *ptr) {
 	// NodeName is TABLE ENTRY WITH AX25 CALL AND ALIAS
-
+	//
 	// Copyies 20 byte 20 DECODED NAME IN FORM ALIAS:CALL to ptr
 	// Returns significant length of string
-
 	int len;
 	char Normcall[10];
-	char * alias = &NodeName[7];
+	char *alias = &NodeName[7];
 	int n = 6;
-	char * start = ptr;
+	char *start = ptr;
 
 	memset(ptr, ' ', 20);
 
@@ -4915,8 +4872,7 @@ int DecodeNodeName(char * NodeName, char * ptr)
 
 	if (*(alias) > ' ')		// Does alias start with a null or a space ?
 	{
-		while (*(alias) > ' ' && n--)
-		{
+		while (*(alias) > ' ' && n--) {
 			*ptr++ = *alias++;
 		}
 		*ptr++ = ':';
@@ -4946,55 +4902,41 @@ char * SetupNodeHeader(struct DATAMESSAGE * Buffer)
 	return ptr;
 }
 
-VOID SendCommandReply(TRANSPORTENTRY * Session, struct DATAMESSAGE * Buffer, int Len)
-{
-	if (Len == (4 + sizeof(void *)))			// Null Packet
-	{
-		ReleaseBuffer((UINT *)Buffer);
+VOID SendCommandReply(TRANSPORTENTRY *Session, struct DATAMESSAGE *Buffer, int Len) {
+	if (Len == (4 + sizeof(void*))) {			// Null Packet
+		ReleaseBuffer((UINT*)Buffer);
 		return;
 	}
 
 	Buffer->LENGTH = Len;
-
-	C_Q_ADD(&Session->L4TX_Q, (UINT *)Buffer);
-
+	C_Q_ADD(&Session->L4TX_Q, (UINT*)Buffer);
 	PostDataAvailable(Session);
 }
 
-
-VOID CommandHandler(TRANSPORTENTRY * Session, struct DATAMESSAGE * Buffer)
-{
+VOID CommandHandler(TRANSPORTENTRY *Session, struct DATAMESSAGE *Buffer) {
 	// ignore frames with single NULL (Keepalive)
-
-	if (Buffer->LENGTH == sizeof(void *) + 5 && Buffer->L2DATA[0] == 0)
-	{
+	if (Buffer->LENGTH == sizeof(void*) + 5 && Buffer->L2DATA[0] == 0) {
 		ReleaseBuffer(Buffer);
 		return;
 	}
 
-	if (Buffer->LENGTH > 100)
-	{
+	if (Buffer->LENGTH > 100) {
 //		Debugprintf("BPQ32 command too long %s", Buffer->L2DATA);
 		ReleaseBuffer(Buffer);
 		return;
 	}
 
 InnerLoop:
-
 	InnerCommandHandler(Session, Buffer);
-	
-//	See if any more commands in buffer
-
-	if (Session->PARTCMDBUFFER)
-	{	
-		char * ptr1, * ptr2;
+	// See if any more commands in buffer
+	if (Session->PARTCMDBUFFER) {
+		char *ptr1, *ptr2;
 		int len;
-		
+
 		Buffer = Session->PARTCMDBUFFER;
 
-		//	Check that message has a CR, if not save buffer and exit
-
-		len = Buffer->LENGTH - (4 + sizeof(void *));
+		// Check that message has a CR, if not save buffer and exit
+		len = Buffer->LENGTH - (4 + sizeof(void*));
 		ptr1 = &Buffer->L2DATA[0];
 
 		ptr2 = memchr(ptr1, 13, len);
@@ -5009,61 +4951,52 @@ InnerLoop:
 }
 
 
-VOID InnerCommandHandler(TRANSPORTENTRY * Session, struct DATAMESSAGE * Buffer)
-{
-	char * ptr1, * ptr2, *ptr3;
-	int len, oldlen, newlen, rest, n;
-	struct DATAMESSAGE * OldBuffer;
-	struct DATAMESSAGE * SaveBuffer;
+VOID InnerCommandHandler(TRANSPORTENTRY *Session, struct DATAMESSAGE *Buffer) {
+	char *ptr1;
+	char *ptr2;
+	char *ptr3;
+	int len;
+	int oldlen;
+	int newlen;
+	int rest;
+	int n;
+	struct DATAMESSAGE *OldBuffer;
+	struct DATAMESSAGE *SaveBuffer;
 	char c;
 
-	//	If a partial command is stored, append this data to it.
-	
-	if (Session->PARTCMDBUFFER)
-	{
-		len = Buffer->LENGTH - (sizeof(void *) + 4);
+	// If a partial command is stored, append this data to it.
+	if (Session->PARTCMDBUFFER) {
+		len = Buffer->LENGTH - (sizeof(void*) + 4);
 		ptr1 = &Buffer->L2DATA[0];
-	
+
 		OldBuffer = Session->PARTCMDBUFFER;			// Old Data
-
-		if (OldBuffer == Buffer)
-		{
-			// something has gone horribly wrong
-
+		if (OldBuffer == Buffer) {					// something has gone horribly wrong
 			Session->PARTCMDBUFFER = NULL;
 			return;
 		}
 
 		oldlen = OldBuffer->LENGTH;
-
 		newlen = len + oldlen;
-
-		if (newlen > 200)
-		{
-			// Command far too long - ignore previous
-	
-			OldBuffer->LENGTH = oldlen = sizeof(void *) + 4;
+		if (newlen > 200) {							// Command far too long - ignore previous
+			OldBuffer->LENGTH = oldlen = sizeof(void*) + 4;
 		}
 
 		OldBuffer->LENGTH += len;
-		memcpy(&OldBuffer->L2DATA[oldlen - (sizeof(void *) + 4)], Buffer->L2DATA, len);
-	
-		ReleaseBuffer((UINT *)Buffer);
-		
+		memcpy(&OldBuffer->L2DATA[oldlen - (sizeof(void*) + 4)], Buffer->L2DATA, len);
+
+		ReleaseBuffer((UINT*)Buffer);
+
 		Buffer = OldBuffer;
-		
+
 		Session->PARTCMDBUFFER = NULL;
 	}
 
-	//	Check that message has a CR, if not save buffer and exit
-
-	len = Buffer->LENGTH - (sizeof(void *) + 4);
+	// Check that message has a CR, if not save buffer and exit
+	len = Buffer->LENGTH - (sizeof(void*) + 4);
 	ptr1 = &Buffer->L2DATA[0];
 
 	// Check for sending YAPP to Node
-
-	if (len == 2 && ptr1[0] == 5 && ptr1[1] == 1)
-	{
+	if (len == 2 && ptr1[0] == 5 && ptr1[1] == 1) {
 		ptr1[0] = 0x15;				// NAK
 
 		ptr1[1] = sprintf(&ptr1[2], "Node doesn't support YAPP Transfers");
@@ -5276,36 +5209,25 @@ VOID DoTheCommand(TRANSPORTENTRY * Session)
 		}
 
 		// ptr1 is input command
-
-		if (memcmp(CMD->String, ptr1, CL) == 0)
-		{
+		if (memcmp(CMD->String, ptr1, CL) == 0) {
 			// Found match so far - check rest
-		
-			char * ptr2 = &CMD->String[CL];
-			
-			ptr1 += CL;
+			char *ptr2 = &CMD->String[CL];
 
-			if (*(ptr1) != ' ')
-			{
-				while(*(ptr1) == *ptr2 && *(ptr1) != ' ')
-				{
+			ptr1 += CL;
+			if (*(ptr1) != ' ') {
+				while (*(ptr1) == *ptr2 && *(ptr1) != ' ') {
 					ptr1++;
 					ptr2++;
 				}
 			}
 
-			if (*(ptr1) == ' ')
-			{
+			if (*(ptr1) == ' ') {
 				Session->BADCOMMANDS = 0;			 // RESET ERROR COUNT
-	
-				// SEE IF SYSOP COMMAND, AND IF SO IF PASSWORD HAS BEEN ENTERED
 
-				if (n < PASSCMD)
-				{
-					//NEEDS PASSWORD FOR SYSOP COMMANDS
-					
-					if (Session->PASSWORD  != 0xFFFF)
-					{
+				// SEE IF SYSOP COMMAND, AND IF SO IF PASSWORD HAS BEEN ENTERED
+				if (n < PASSCMD) {
+					// NEEDS PASSWORD FOR SYSOP COMMANDS
+					if (Session->PASSWORD  != 0xFFFF) {
 						ptr1 = ReplyPointer;
 
 						memcpy(ptr1, PASSWORDMSG, LPASSMSG);
@@ -5323,32 +5245,24 @@ VOID DoTheCommand(TRANSPORTENTRY * Session)
 				return;
 			}
 		}
-		
 		APPLMASK <<= 1;
 		ALIASPTR += ALIASLEN;
 
 		CMD++;
-	
 	}
 
 	// See if a NETROMX Service
-
 	// We now use service@node, unlike xr
-
-	if (strchr(ptr1, '@'))
-	{
+	if (strchr(ptr1, '@')) {
 		Cmd = strtok_s(ptr1, "@", &Context);
 		Node = strtok_s(NULL, " ", &Context);
 
-		if (Cmd && Node)
-		{
+		if (Cmd && Node) {
 			if (Context && Context[0] == 'S')
 				Session->STAYFLAG = Stay;
 
-			for (i = 0; i < NUMBEROFSSERVICES; i++)
-			{
-				if (strcmp(Cmd, SERVICES[i].ServiceName) == 0)
-				{
+			for (i = 0; i < NUMBEROFSSERVICES; i++) {
+				if (strcmp(Cmd, SERVICES[i].ServiceName) == 0) {
 					ConnecttoService(Session, ReplyPointer, SERVICES[i].ServiceNo, Node, Stay);
 					return;
 				}
@@ -5356,8 +5270,7 @@ VOID DoTheCommand(TRANSPORTENTRY * Session)
 
 			// May be numeric service
 
-			for (i = 0; i < strlen(Cmd); i++)
-			{
+			for (i = 0; i < strlen(Cmd); i++) {
 				if (!isdigit(Cmd[i]))
 					break;
 			}
@@ -5393,9 +5306,8 @@ VOID DoTheCommand(TRANSPORTENTRY * Session)
 	}
 
 
-	VOID StatsTimer()
-	{
-		struct PORTCONTROL * PORT = PORTTABLE;
+	VOID StatsTimer() {
+		struct PORTCONTROL *PORT = PORTTABLE;
 		uint64_t sum, sum2;
 
 		// Interval is 60 secs
@@ -6906,33 +6818,23 @@ DllExport int APIENTRY GetCallsignNoSem(int stream, char * callsign)
 
 				AXCall = &Partner->L4USER[0];
 			}
-		}
-		else if (Partner->L4CIRCUITTYPE & PACTOR)
-		{
-			//	PACTOR Type - Frames are queued on the Port Entry
-
-			EXTPORTDATA * EXTPORT = Partner->L4TARGET.EXTPORT;
+		} else if (Partner->L4CIRCUITTYPE & PACTOR) {
+			// PACTOR Type - Frames are queued on the Port Entry
+			EXTPORTDATA *EXTPORT = Partner->L4TARGET.EXTPORT;
 
 			if (EXTPORT)
 				AXCall = &EXTPORT->ATTACHEDSESSIONS[Partner->KAMSESSION]->L4USER[0];
 
-		}
-		else
-		{
-			//	MUST BE NODE SESSION
-
-			//	ANOTHER NODE
-
-			//	IF THE HOST IS THE UPLINKING STATION, WE NEED THE TARGET CALL
-
-			if (L4->L4CIRCUITTYPE & UPLINK)
-			{
+		} else {
+			// MUST BE NODE SESSION
+			// ANOTHER NODE
+			// IF THE HOST IS THE UPLINKING STATION, WE NEED THE TARGET CALL
+			if (L4->L4CIRCUITTYPE & UPLINK) {
 				struct DEST_LIST *DEST = Partner->L4TARGET.DEST;
 
 				if (DEST)
 					AXCall = &DEST->DEST_CALL[0];
-			}
-			else
+			} else
 				AXCall = Partner->L4USER;
 		}
 		if (AXCall)
@@ -6944,8 +6846,7 @@ DllExport int APIENTRY GetCallsignNoSem(int stream, char * callsign)
 }
 
 
-VOID CMDSTREAMS(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, struct CMDX * CMD)
-{
+VOID CMDSTREAMS(TRANSPORTENTRY *Session, char *Bufferptr, char *CmdTail, struct CMDX *CMD) {
 	int i;
 	char callsign[12] = "";
 	char flag[3];
@@ -6955,9 +6856,8 @@ VOID CMDSTREAMS(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, stru
 	int OneBits;
 	Bufferptr = Cmdprintf(Session, Bufferptr, "\r|   | RX | TX | MON |App|Flg| Callsign |    Program    |\r");
 
-	for (i=1; i <=BPQHOSTSTREAMS; i++)
-	{		
-		callsign[0]=0;
+	for (i = 1; i <= BPQHOSTSTREAMS; i++) {
+		callsign[0] = 0;
 
 		if (GetAllocationState(i) == 0)
 			continue;
@@ -6969,12 +6869,10 @@ VOID CMDSTREAMS(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, stru
 		Mask = MaskCopy = Get_APPLMASK(i);
 
 		// if only one bit set, convert to number
-
 		AppNumber = 0;
 		OneBits = 0;
 
-		while (MaskCopy)
-		{
+		while (MaskCopy) {
 			if (MaskCopy & 1)
 				OneBits++;
 
@@ -6994,10 +6892,4 @@ VOID CMDSTREAMS(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, stru
 	SendCommandReply(Session, REPLYBUFFER, (int)(Bufferptr - (char *)REPLYBUFFER));
 	return;
 }
-
-
-
-
-
-
 

@@ -1,10 +1,10 @@
 // Mail and Chat Server for BPQ32 Packet Switch
 //
-//	Monitor Window(s) Module
+// Monitor Window(s) Module
 
 #include "BPQChat.h"
 
-static char ClassName[]="BPQMONWINDOW";
+static char ClassName[] = "BPQMONWINDOW";
 
 
 static WNDPROC wpOrigInputProc; 
@@ -15,19 +15,22 @@ HWND hMonitor;
 static HWND hwndInput;
 static HWND hwndOutput;
 
-static HMENU hMenu;		// handle of menu 
+static HMENU hMenu;		// handle of menu
 
 
 #define InputBoxHeight 25
+
 RECT MonitorRect;
 RECT OutputRect;
 
-int Height, Width, LastY;
+int Height;
+int Width;
+int LastY;
 
 static char kbbuf[160];
-static int kbptr=0;
+static int kbptr = 0;
 
-static char * readbuff;
+static char *readbuff;
 static int readbufflen;
 
 static BOOL StripLF = TRUE;
@@ -39,8 +42,8 @@ BOOL LogBBS = TRUE;
 BOOL LogCHAT = TRUE;
 BOOL LogTCP = TRUE;
 
-static int PartLinePtr=0;
-static int PartLineIndex=0;		// Listbox index of (last) incomplete line
+static int PartLinePtr = 0;
+static int PartLineIndex = 0;		// Listbox index of (last) incomplete line
 
 
 static LRESULT CALLBACK MonWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -49,44 +52,43 @@ static LRESULT APIENTRY OutputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 static LRESULT APIENTRY MonProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) ;
 static void MoveWindows();
 
-#define BGCOLOUR RGB(236,233,216)
+#define BGCOLOUR RGB(236, 233, 216)
 
 extern char MonitorSize[32];
 
-BOOL CreateMonitor()
-{
-    WNDCLASS  wc;
+
+BOOL CreateMonitor() {
+	WNDCLASS wc;
 	HBRUSH bgBrush;
 	char Text[80];
 
-	if (hMonitor)
-	{
+	if (hMonitor) {
 		ShowWindow(hMonitor, SW_SHOWNORMAL);
 		SetForegroundWindow(hMonitor);
-		return FALSE;							// Alreaqy open
+		return FALSE;							// Already open
 	}
 
 	bgBrush = CreateSolidBrush(BGCOLOUR);
 
-    wc.style = CS_HREDRAW | CS_VREDRAW; 
-    wc.lpfnWndProc = MonWndProc;       
-                                        
-    wc.cbClsExtra = 0;                
-    wc.cbWndExtra = DLGWINDOWEXTRA;
-	wc.hInstance = hInst;
-    wc.hIcon = LoadIcon( hInst, MAKEINTRESOURCE(BPQICON) );
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = bgBrush; 
+	wc.style = (CS_HREDRAW | CS_VREDRAW);
+	wc.lpfnWndProc = MonWndProc;
 
-	wc.lpszMenuName = NULL;	
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = DLGWINDOWEXTRA;
+	wc.hInstance = hInst;
+	wc.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(BPQICON));
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hbrBackground = bgBrush;
+
+	wc.lpszMenuName = NULL;
 	wc.lpszClassName = ClassName; 
 
 	RegisterClass(&wc);
 
-	hMonitor=CreateDialog(hInst,ClassName,0,NULL);
-	
-    if (!hMonitor)
-        return (FALSE);
+	hMonitor = CreateDialog(hInst, ClassName, 0, NULL);
+
+	if (!hMonitor)
+		return (FALSE);
 
 	wsprintf(Text, "Chat %s Monitor", Session);
 	SetWindowText(hMonitor, Text);
@@ -94,47 +96,41 @@ BOOL CreateMonitor()
 	readbuff = zalloc(1000);
 	readbufflen = 1000;
 
-	hMenu=GetMenu(hMonitor);
+	hMenu = GetMenu(hMonitor);
 
-	CheckMenuItem(hMenu,MONBBS, MonBBS ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(hMenu,MONCHAT, MonCHAT ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(hMenu,MONTCP, MonTCP ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(hMenu, MONBBS, MonBBS ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(hMenu, MONCHAT, MonCHAT ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(hMenu, MONTCP, MonTCP ? MF_CHECKED : MF_UNCHECKED);
 
-	DrawMenuBar(hWnd);	
+	DrawMenuBar(hWnd);
 
-	// Retrieve the handlse to the edit controls. 
-
+	// Retrieve the handle to the edit controls.
 	hwndOutput = GetDlgItem(hMonitor, 121); 
  
-	// Set our own WndProcs for the controls. 
-
+	// Set our own WndProcs for the controls.
 	wpOrigOutputProc = (WNDPROC)SetWindowLong(hwndOutput, GWL_WNDPROC, (LONG)OutputProc);
 
-	if (cfgMinToTray)
-	{
+	if (cfgMinToTray) {
 		AddTrayMenuItem(hMonitor, Text);
 	}
 
 	ShowWindow(hMonitor, SW_SHOWNORMAL);
 
-	if (MonitorRect.right < 100 || MonitorRect.bottom < 100)
-	{
+	if (MonitorRect.right < 100 || MonitorRect.bottom < 100) {
 		GetWindowRect(hMonitor,	&MonitorRect);
 	}
 
-	MoveWindow(hMonitor,MonitorRect.left,MonitorRect.top, MonitorRect.right-MonitorRect.left, MonitorRect.bottom-MonitorRect.top, TRUE);
-
+	MoveWindow(hMonitor, MonitorRect.left, MonitorRect.top, MonitorRect.right - MonitorRect.left, MonitorRect.bottom - MonitorRect.top, TRUE);
 	MoveWindows();
 
 	return TRUE;
-
 }
 
-
-static void MoveWindows()
-{
-	RECT rcMain, rcClient;
-	int ClientHeight, ClientWidth;
+static void MoveWindows() {
+	RECT rcMain;
+	RECT rcClient;
+	int ClientHeight;
+	int ClientWidth;
 
 	GetWindowRect(hMonitor, &rcMain);
 	GetClientRect(hMonitor, &rcClient); 
@@ -148,180 +144,134 @@ static void MoveWindows()
 }
 
 
-static LRESULT CALLBACK MonWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	int wmId, wmEvent;
+static LRESULT CALLBACK MonWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	int wmId;
+	int wmEvent;
 	LPRECT lprc;
-	
-	switch (message) { 
 
+	switch (message) {
 		case WM_ACTIVATE:
-
 			SetFocus(hwndInput);
 			break;
 
+		case WM_COMMAND:
+			wmId = LOWORD(wParam);		// Remember, these are...
+			wmEvent = HIWORD(wParam);	// ...different for Win32!
 
-	case WM_COMMAND:
+			switch (wmId) {
+				case MONBBS:
+					ToggleParam(hMenu, hWnd, &MonBBS, MONBBS);
+					break;
 
-		wmId    = LOWORD(wParam); // Remember, these are...
-		wmEvent = HIWORD(wParam); // ...different for Win32!
+				case MONCHAT:
+					ToggleParam(hMenu, hWnd, &MonCHAT, MONCHAT);
+					break;
 
-		switch (wmId) {
+				case MONTCP:
+					ToggleParam(hMenu, hWnd, &MonTCP, MONTCP);
+					break;
 
-		case MONBBS:
+				case BPQCLEAROUT:
+					SendMessage(hwndOutput,LB_RESETCONTENT, 0, 0);		
+					break;
 
-			ToggleParam(hMenu, hWnd, &MonBBS, MONBBS);
-			break;
+				case BPQCOPYOUT:
+					CopyToClipboard(hwndOutput);
+					break;
 
-		case MONCHAT:
+#if 0
+				case BPQHELP:
+					HtmlHelp(hWnd,"BPQTerminal.chm",HH_HELP_FINDER,0);  
+					break;
+#endif
 
-			ToggleParam(hMenu, hWnd, &MonCHAT, MONCHAT);
-			break;
+				default:
+					return 0;
+			}
 
-		case MONTCP:
+		case WM_SYSCOMMAND:
+			wmId    = LOWORD(wParam); // Remember, these are...
+			wmEvent = HIWORD(wParam); // ...different for Win32!
 
-			ToggleParam(hMenu, hWnd, &MonTCP, MONTCP);
-			break;
+			switch (wmId) {
+				case SC_MINIMIZE:
+					if (cfgMinToTray)
+						return ShowWindow(hWnd, SW_HIDE);
 
-
-		case BPQCLEAROUT:
-
-			SendMessage(hwndOutput,LB_RESETCONTENT, 0, 0);		
-			break;
-
-		case BPQCOPYOUT:
-		
-			CopyToClipboard(hwndOutput);
-			break;
-
-
-
-		//case BPQHELP:
-
-		//	HtmlHelp(hWnd,"BPQTerminal.chm",HH_HELP_FINDER,0);  
-		//	break;
-
-		default:
-
-			return 0;
-
-		}
-
-	case WM_SYSCOMMAND:
-
-		wmId    = LOWORD(wParam); // Remember, these are...
-		wmEvent = HIWORD(wParam); // ...different for Win32!
-
-		switch (wmId) { 
-
-		case  SC_MINIMIZE: 
-
-			if (cfgMinToTray)
-				return ShowWindow(hWnd, SW_HIDE);		
-		
-			default:
-		
-				return (DefWindowProc(hWnd, message, wParam, lParam));
-		}
+				default:
+					return (DefWindowProc(hWnd, message, wParam, lParam));
+			}
 
 		case WM_SIZING:
-
-			lprc = (LPRECT) lParam;
-
-			Height = lprc->bottom-lprc->top;
-			Width = lprc->right-lprc->left;
-
+			lprc = (LPRECT)lParam;
+			Height = lprc->bottom - lprc->top;
+			Width = lprc->right - lprc->left;
 			MoveWindows();
-			
 			return TRUE;
 
 
-		case WM_DESTROY:
-		
-			// Remove the subclass from the edit control. 
-
+		case WM_DESTROY:			// Remove the subclass from the edit control. 
 			GetWindowRect(hWnd,	&MonitorRect);	// For save soutine
-
-            SetWindowLong(hwndInput, GWL_WNDPROC, 
-                (LONG) wpOrigInputProc); 
-         
-
+			SetWindowLong(hwndInput, GWL_WNDPROC, (LONG)wpOrigInputProc);
 			if (cfgMinToTray) 
 				DeleteTrayMenuItem(hWnd);
 
-
 			hMonitor = NULL;
-
 			free(readbuff);
 			readbufflen = 0;
-
 			break;
 
 		default:
 			return (DefWindowProc(hWnd, message, wParam, lParam));
-
 	}
+
 	return (0);
 }
 
-
-
-LRESULT APIENTRY OutputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-
-	// Trap mouse messages, so we cant select stuff in output and mon windows,
-	//	otherwise scrolling doesnt work.
-
-	if (uMsg >= WM_MOUSEFIRST && uMsg <=  WM_LBUTTONDBLCLK) 
-       return TRUE; 
+LRESULT APIENTRY OutputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	// Trap mouse messages, so we cant select stuff in output and mon windows, otherwise scrolling doesn't work.
+	if (uMsg >= WM_MOUSEFIRST && uMsg <=  WM_LBUTTONDBLCLK)
+		return TRUE; 
 
 	return CallWindowProc(wpOrigOutputProc, hwnd, uMsg, wParam, lParam); 
 } 
 
-int WritetoMonitorWindow(char * Msg, int len)
-{
-	char * ptr1, * ptr2;
+int WritetoMonitorWindow(char *Msg, int len) {
+	char *ptr1;
+	char *ptr2;
 	int index;
 
-	if (len+PartLinePtr > readbufflen)
-	{
-		readbufflen += len+PartLinePtr;
+	if (len + PartLinePtr > readbufflen) {
+		readbufflen += len + PartLinePtr;
 		readbuff = realloc(readbuff, readbufflen);
 	}
 
 	if (PartLinePtr != 0)
-		SendMessage(hwndOutput,LB_DELETESTRING,PartLineIndex,(LPARAM)(LPCTSTR) 0 );		
+		SendMessage(hwndOutput, LB_DELETESTRING, PartLineIndex, (LPARAM)(LPCTSTR)0);
 
 	memcpy(&readbuff[PartLinePtr], Msg, len);
-		
-	len=len+PartLinePtr;
 
-	ptr1=&readbuff[0];
-	readbuff[len]=0;
+	len = len + PartLinePtr;
+
+	ptr1 = &readbuff[0];
+	readbuff[len] = 0;
 
 	do {
-		ptr2=memchr(ptr1,7,len);
-			
-		if (ptr2)
-			*(ptr2)=32;
+		ptr2 = memchr(ptr1, 7, len);
 
+		if (ptr2)
+			*(ptr2) = 32;
 	} while (ptr2);
 
 lineloop:
-
 //	if (PartLinePtr > 300)
 //		PartLinePtr = 0;
 
-	if (len > 0)
-	{
-		//	copy text to control a line at a time	
-					
-		ptr2=memchr(ptr1,13,len);
+	if (len > 0) {		// copy text to control a line at a time
+		ptr2 = memchr(ptr1, 13, len);
 
-		if (ptr2 == 0)
-		{
+		if (ptr2 == 0) {
 			// no newline. Move data to start of buffer and Save pointer
-
 			PartLinePtr=len;
 			memmove(readbuff,ptr1,len);
 			PartLineIndex=SendMessage(hwndOutput,LB_ADDSTRING,0,(LPARAM)(LPCTSTR) ptr1 );
@@ -388,65 +338,63 @@ static  void CopyToClipboard(HWND hWnd)
 	//
 	
 	n = SendMessage(hWnd, LB_GETCOUNT, 0, 0);		
-	
-	for (i=0; i<n; i++)
-	{
-		len+=SendMessage(hWnd, LB_GETTEXTLEN, i, 0);
+
+	for (i = 0; i < n; i++) {
+		len += SendMessage(hWnd, LB_GETTEXTLEN, i, 0);
 	}
 
-	hMem=GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, len+n+n+1);
-	
+	hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, len + n + n + 1);
 
-	if (hMem != 0)
-	{
-		ptr=GlobalLock(hMem);
-	
-		if (OpenClipboard(MainWnd))
-		{
-			//			CopyScreentoBuffer(GlobalLock(hMem));
-			
-			for (i=0; i<n; i++)
-			{
-				ptr+=SendMessage(hWnd, LB_GETTEXT, i, (LPARAM) ptr);
-				*(ptr++)=13;
-				*(ptr++)=10;
+	if (hMem != 0) {
+		ptr = GlobalLock(hMem);
+
+		if (OpenClipboard(MainWnd)) {
+//			CopyScreentoBuffer(GlobalLock(hMem));
+
+			for (i = 0; i < n; i++) {
+				ptr += SendMessage(hWnd, LB_GETTEXT, i, (LPARAM)ptr);
+				*(ptr++) = 13;
+				*(ptr++) = 10;
 			}
 
-			*(ptr)=0;					// end of data
+			*(ptr) = 0;					// end of data
 
 			GlobalUnlock(hMem);
 			EmptyClipboard();
-			SetClipboardData(CF_TEXT,hMem);
+			SetClipboardData(CF_TEXT, hMem);
 			CloseClipboard();
+		} else {
+			GlobalFree(hMem);
 		}
-			else
-				GlobalFree(hMem);		
 	}
 }
 
 
-HANDLE LogHandle[4] = {INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE};
+HANDLE LogHandle[4] = {
+	INVALID_HANDLE_VALUE,
+	INVALID_HANDLE_VALUE,
+	INVALID_HANDLE_VALUE,
+	INVALID_HANDLE_VALUE
+};
 
-char * Logs[4] = {"BBS", "CHAT", "TCP", "DEBUG"};
+char *Logs[4] = {
+	"BBS",
+	"CHAT",
+	"TCP",
+	"DEBUG"
+};
 
-BOOL OpenLogfile(int Flags)
-{
+BOOL OpenLogfile(int Flags) {
 	UCHAR FN[MAX_PATH];
 	time_t T;
-	struct tm * tm;
+	struct tm *tm;
 
 	T = time(NULL);
-	tm = gmtime(&T);	
+	tm = gmtime(&T);
 
 	sprintf(FN,"%s/logs/log_%02d%02d%02d_%s.txt", GetLogDirectory(), tm->tm_year-100, tm->tm_mon+1, tm->tm_mday, Logs[Flags]);
 
-	LogHandle[Flags] = CreateFile(FN,
-					GENERIC_WRITE,
-					FILE_SHARE_READ,
-					NULL,
-					OPEN_ALWAYS,
-					FILE_ATTRIBUTE_NORMAL,
-					NULL);
+	LogHandle[Flags] = CreateFile(FN, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	SetFilePointer(LogHandle[Flags], 0, 0, FILE_END);
 

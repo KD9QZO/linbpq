@@ -99,51 +99,38 @@ int sessionStatusInterval = 300;		// 5 mins
 
 extern APPLCALLS * APPL;
 
-VOID NETROMMSG(struct _LINKTABLE * LINK, L3MESSAGEBUFFER * L3MSG)
-{
+VOID NETROMMSG(struct _LINKTABLE *LINK, L3MESSAGEBUFFER *L3MSG) {
 	//	MAKE SURE PID IS 0CF - IN CASE SOMEONE IS SENDING L2 STUFF ON WHAT 
 	//	WE THINK IS A _NODE-_NODE LINK
-
-	struct DEST_LIST * DEST;
-
+	struct DEST_LIST *DEST;
 	int n;
 
-	if (L3MSG->L3PID != 0xCF)
-	{
+	if (L3MSG->L3PID != 0xCF) {
 		ReleaseBuffer(L3MSG);
 		return;
 	}
 
-	if (LINK->NEIGHBOUR == 0)
-	{
+	if (LINK->NEIGHBOUR == 0) {
 		// NO ROUTE ASSOCIATED WITH THIS CIRCUIT - SET ONE UP
-
 		CHECKNEIGHBOUR(LINK, L3MSG);
 
-		if (LINK->NEIGHBOUR == 0)
-		{
+		if (LINK->NEIGHBOUR == 0) {
 			//	COULDNT SET UP NEIGHBOUR - CAN ONLY THROW IT AWAY
-
 			ReleaseBuffer(L3MSG);
 			return;
 		}
 	}
 
 	// See if a INP3 RIF (first Byte 0xFF)
-
-	if (L3MSG->L3SRCE[0] == 0xff)
-	{
+	if (L3MSG->L3SRCE[0] == 0xff) {
 		// INP3
-
 		ProcessINP3RIF(LINK->NEIGHBOUR, &L3MSG->L3SRCE[1], L3MSG->LENGTH - (MSGHDDRLEN + 2), L3MSG->Port);  // = 2 = PID + FF Flag
 		ReleaseBuffer(L3MSG);
 		return;
 	}
 
-	//	IS IT INP3 (L3RTT)
-
-	if (CompareCalls(L3MSG->L3DEST, L3RTT))
-	{
+	// IS IT INP3 (L3RTT)
+	if (CompareCalls(L3MSG->L3DEST, L3RTT)) {
 		ProcessRTTMsg(LINK->NEIGHBOUR, L3MSG, L3MSG->LENGTH, L3MSG->Port);
 		return;
 	}
@@ -290,11 +277,10 @@ NO_PROBLEM:
 	L3FRAMES++;
 }
 
-VOID SENDL4MESSAGE(TRANSPORTENTRY * L4, struct DATAMESSAGE * Msg)
-{
-	L3MESSAGEBUFFER * L3MSG;
-	struct DEST_LIST * DEST;
-	struct DATAMESSAGE * Copy;
+VOID SENDL4MESSAGE(TRANSPORTENTRY *L4, struct DATAMESSAGE *Msg) {
+	L3MESSAGEBUFFER *L3MSG;
+	struct DEST_LIST *DEST;
+	struct DATAMESSAGE *Copy;
 	int FRAGFLAG = 0;
 	int Len;
 

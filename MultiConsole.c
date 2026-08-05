@@ -298,8 +298,7 @@ BOOL CreateConsole(int Stream)
 }
 
 
-VOID CloseConsole(int Stream)
-{
+VOID CloseConsole(int Stream) {
 	struct ConsoleInfo * Cinfo;
 
 	for (Cinfo = ConsHeader[0]; Cinfo; Cinfo = Cinfo->next)
@@ -380,419 +379,401 @@ LRESULT CALLBACK ConsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		 Cinfo = InitHeader;
 	
 	switch (message) {
+		case WM_CTLCOLOREDIT:
+			if (Cinfo->Scrolled) {
+				HDC hdcStatic = (HDC)wParam;
+				SetBkMode(hdcStatic, TRANSPARENT);
 
-	case WM_CTLCOLOREDIT:
-		
-		if (Cinfo->Scrolled)
-		{
-			HDC hdcStatic = (HDC)wParam;
-			SetBkMode(hdcStatic, TRANSPARENT);
-
-			return (LONG)GetStockObject(LTGRAY_BRUSH);
-		}
-		return (DefWindowProc(hWnd, message, wParam, lParam));
-
-
-	case WM_VSCROLL:
-		break;
-
-	case WM_NOTIFY:
-	{
-		const MSGFILTER * pF = (MSGFILTER *)lParam;
-		POINT pos;
-		CHARRANGE Range;
-
-		if(pF->nmhdr.hwndFrom == Cinfo->hwndOutput)
-		{
-			if(pF->msg == WM_VSCROLL)
-			{
-//				int Command = LOWORD(pF->wParam);
-//				int Pos = HIWORD(pF->wParam);
-				
-//				Cinfo->Thumb = SendMessage(Cinfo->hwndOutput, EM_GETTHUMB, 0, 0);
-
-				DoRefresh(Cinfo);
-				break;		
+				return (LONG)GetStockObject(LTGRAY_BRUSH);
 			}
-
-			if(pF->msg == WM_KEYUP)
-			{
-				if (pF->wParam == VK_PRIOR || pF->wParam == VK_NEXT)
-				{
-//					Cinfo->Thumb = SendMessage(Cinfo->hwndOutput, EM_GETTHUMB, 0, 0);
-					DoRefresh(Cinfo);
-				}
-			}
-			
-			if(pF->msg == WM_RBUTTONDOWN)
-			{
-				// Only allow popup if something is selected
-
-				SendMessage(Cinfo->hwndOutput, EM_EXGETSEL , 0, (WPARAM)&Range);
-				if (Range.cpMin == Range.cpMax)
-					return TRUE;
-
-				GetCursorPos(&pos);
-				TrackPopupMenu(trayMenu, 0, pos.x, pos.y, 0, hWnd, 0);
-				return TRUE;
-			}
-		}
-		break;
-	}
-	
-	case WM_MEASUREITEM: 
- 
-            lpmis = (LPMEASUREITEMSTRUCT) lParam; 
- 
-            // Set the height of the list box items. 
- 
-            lpmis->itemHeight = 15; 
-            return TRUE; 
- 
-        case WM_DRAWITEM: 
- 
-            lpdis = (LPDRAWITEMSTRUCT) lParam; 
- 
-            // If there are no list box items, skip this message. 
- 
-            if (lpdis->itemID == -1) 
-            { 
-                return TRUE; 
-            } 
- 
-            switch (lpdis->itemAction) 
-            { 
-				case ODA_SELECT: 
-                case ODA_DRAWENTIRE: 
- 
-				  // if Chat Console, and message has a colour eacape, action it 
-					
-					SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM) tchBuffer); 
- 
-                    GetTextMetrics(lpdis->hDC, &tm); 
- 
-                    y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
-
-					if ((Cinfo->BPQStream == -2) && (tchBuffer[0] == 0x1b))
-					{
-						SetTextColor(lpdis->hDC,  Colours[tchBuffer[1] - 10]);
-						buf += 2;
-					}
-//					SetBkColor(lpdis->hDC, 0);
-
-                    TextOut(lpdis->hDC, 
-                        6, 
-                        y, 
-                        buf, 
-                        strlen(buf)); 						
- 
- //					SetTextColor(lpdis->hDC, OldColour);
-
-                    break; 
-			}
-
-			return TRUE;
+			return (DefWindowProc(hWnd, message, wParam, lParam));
 
 
-	case WM_ACTIVATE:
-
-		SetFocus(Cinfo->hwndInput);
-		break;
-
-	case WM_COMMAND:
-
-		wmId    = LOWORD(wParam); // Remember, these are...
-		wmEvent = HIWORD(wParam); // ...different for Win32!
-
-		if (wmId >= BBSUSERCHAT && wmId < BBSUSERCHAT + 63)
-		{
-			// Chat to user
-
-			conn=&Connections[wmId-BBSUSERCHAT];
-		
-			if (conn->Active)
-			{
-				conn->BBSFlags |= SYSOPCHAT;
-				Cinfo->Console->SysopChatStream = conn;
-				SendUnbuffered(conn->BPQStream, chatMsg, strlen(chatMsg));
-
-
-//				Disconnect(conn->BPQStream);
-			}
-		}
-
-		switch (wmId) {
-
-		case ENDUSERCHAT:
-
-			if (Cinfo->Console->SysopChatStream)
-			{
-				SendUnbuffered(Cinfo->Console->SysopChatStream->BPQStream, endChatMsg, strlen(endChatMsg));
-				Cinfo->Console->SysopChatStream->BBSFlags &= ~SYSOPCHAT;
-				SendPrompt(Cinfo->Console->SysopChatStream, Cinfo->Console->SysopChatStream->UserPointer);
-				SendPrompt(Cinfo->Console, Cinfo->Console->UserPointer);
-				Cinfo->Console->SysopChatStream = 0;
-			}
-
+		case WM_VSCROLL:
 			break;
 
-
-		case 40000:
+		case WM_NOTIFY:
 		{
-			int len=0;
-			HGLOBAL	hMem;
-			char * ptr;
+			const MSGFILTER * pF = (MSGFILTER *)lParam;
+			POINT pos;
 			CHARRANGE Range;
 
-			// Copy Rich Text Selection to Clipboard
-	
-			SendMessage(Cinfo->hwndOutput, EM_EXGETSEL , 0, (WPARAM)&Range);
-	
-			hMem=GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, Range.cpMax - Range.cpMin + 1);
-
-			if (hMem != 0)
+			if(pF->nmhdr.hwndFrom == Cinfo->hwndOutput)
 			{
-				ptr=GlobalLock(hMem);
-	
-				if (OpenClipboard(Cinfo->hConsole))
+				if(pF->msg == WM_VSCROLL)
 				{
-					len = SendMessage(Cinfo->hwndOutput, EM_GETSELTEXT  , 0, (WPARAM)ptr);
+	//				int Command = LOWORD(pF->wParam);
+	//				int Pos = HIWORD(pF->wParam);
+					
+	//				Cinfo->Thumb = SendMessage(Cinfo->hwndOutput, EM_GETTHUMB, 0, 0);
 
-					GlobalUnlock(hMem);
-					EmptyClipboard();
-					SetClipboardData(CF_TEXT,hMem);
-					CloseClipboard();
+					DoRefresh(Cinfo);
+					break;		
+				}
+
+				if(pF->msg == WM_KEYUP)
+				{
+					if (pF->wParam == VK_PRIOR || pF->wParam == VK_NEXT)
+					{
+	//					Cinfo->Thumb = SendMessage(Cinfo->hwndOutput, EM_GETTHUMB, 0, 0);
+						DoRefresh(Cinfo);
+					}
+				}
+				
+				if(pF->msg == WM_RBUTTONDOWN)
+				{
+					// Only allow popup if something is selected
+
+					SendMessage(Cinfo->hwndOutput, EM_EXGETSEL , 0, (WPARAM)&Range);
+					if (Range.cpMin == Range.cpMax)
+						return TRUE;
+
+					GetCursorPos(&pos);
+					TrackPopupMenu(trayMenu, 0, pos.x, pos.y, 0, hWnd, 0);
+					return TRUE;
 				}
 			}
-			else
-				GlobalFree(hMem);
+			break;
+		}
+		
+		case WM_MEASUREITEM: 
+	 
+		        lpmis = (LPMEASUREITEMSTRUCT) lParam; 
+	 
+		        // Set the height of the list box items. 
+	 
+		        lpmis->itemHeight = 15; 
+		        return TRUE; 
+	 
+		    case WM_DRAWITEM: 
+	 
+		        lpdis = (LPDRAWITEMSTRUCT) lParam; 
+	 
+		        // If there are no list box items, skip this message. 
+	 
+		        if (lpdis->itemID == -1) 
+		        { 
+		            return TRUE; 
+		        } 
+	 
+		        switch (lpdis->itemAction) 
+		        { 
+					case ODA_SELECT: 
+		            case ODA_DRAWENTIRE: 
+	 
+					  // if Chat Console, and message has a colour eacape, action it 
+						
+						SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM) tchBuffer); 
+	 
+		                GetTextMetrics(lpdis->hDC, &tm); 
+	 
+		                y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
+
+						if ((Cinfo->BPQStream == -2) && (tchBuffer[0] == 0x1b))
+						{
+							SetTextColor(lpdis->hDC,  Colours[tchBuffer[1] - 10]);
+							buf += 2;
+						}
+	//					SetBkColor(lpdis->hDC, 0);
+
+		                TextOut(lpdis->hDC, 
+		                    6, 
+		                    y, 
+		                    buf, 
+		                    strlen(buf)); 						
+	 
+	 //					SetTextColor(lpdis->hDC, OldColour);
+
+		                break; 
+				}
+
+				return TRUE;
+
+
+		case WM_ACTIVATE:
 
 			SetFocus(Cinfo->hwndInput);
 			break;
-		}
 
-		case BPQBELLS:
+		case WM_COMMAND:
 
-			ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->Bells, BPQBELLS);
-			Bells = Cinfo->Bells;
-			break;
+			wmId    = LOWORD(wParam); // Remember, these are...
+			wmEvent = HIWORD(wParam); // ...different for Win32!
 
-		case BPQFLASHONBELL:
-
-			ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->FlashOnBell, BPQFLASHONBELL);
-			FlashOnBell = Cinfo->FlashOnBell;
-			break;
-
-		case BPQStripLF:
-
-			ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->StripLF, BPQStripLF);
-			StripLF = Cinfo->StripLF;
-			break;
-
-		case IDM_WARNINPUT:
-
-			ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->WarnWrap, IDM_WARNINPUT);
-			WarnWrap = Cinfo->WarnWrap;
-			break;
-
-
-		case IDM_WRAPTEXT:
-
-			ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->WrapInput, IDM_WRAPTEXT);
-			Cinfo->WrapInput = WrapInput;
-			break;
-
-		case IDM_Flash:
-
-			ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->FlashOnConnect, IDM_Flash);
-			FlashOnConnect = Cinfo->FlashOnConnect;
-			break;
-
-		case IDM_CLOSEWINDOW:
-
-			ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->CloseWindowOnBye, IDM_CLOSEWINDOW);
-			CloseWindowOnBye = Cinfo->CloseWindowOnBye;
-			break;
-
-		case BPQCLEAROUT:
-
-			for (i = 0; i < MAXLINES; i++)
+			if (wmId >= BBSUSERCHAT && wmId < BBSUSERCHAT + 63)
 			{
-				Cinfo->OutputScreen[i][0] = 0;
-			}
+				// Chat to user
 
-			Cinfo->CurrentLine = 0;
-			DoRefresh(Cinfo);
-			break;
-
-
-			SendMessage(Cinfo->hwndOutput,LB_RESETCONTENT, 0, 0);		
-			break;
-
-		case BPQCOPYOUT:
-		
-			CopyRichTextToClipboard(Cinfo->hwndOutput);
-			break;
-
-		//case BPQHELP:
-
-		//	HtmlHelp(hWnd,"BPQTerminal.chm",HH_HELP_FINDER,0);  
-		//	break;
-
-		default:
-
-			return 0;
-
-		}
-
-	case WM_SYSCOMMAND:
-
-
-		wmId    = LOWORD(wParam); // Remember, these are...
-		wmEvent = HIWORD(wParam); // ...different for Win32!
-
-		switch (wmId) { 
-
-		case  SC_MINIMIZE: 
-
-			if (cfgMinToTray)
-				return ShowWindow(hWnd, SW_HIDE);		
-		
-			default:
-		
-				return (DefWindowProc(hWnd, message, wParam, lParam));
-		}
-
-
-		case WM_SIZING:
-
-			lprc = (LPRECT) lParam;
-
-			Cinfo->Height = lprc->bottom-lprc->top;
-			Cinfo->Width = lprc->right-lprc->left;
-
-			MoveWindows(Cinfo);
+				conn=&Connections[wmId-BBSUSERCHAT];
 			
-			return TRUE;
-
-		case WM_SIZE:
-	
-			MoveWindows(Cinfo);		
-			return TRUE;
-		
-		case WM_CLOSE:
-
-	
-			if (Cinfo->Console->SysopChatStream)
-			{
-				SendUnbuffered(Cinfo->Console->SysopChatStream->BPQStream, endChatMsg, strlen(endChatMsg));
-				Cinfo->Console->SysopChatStream->BBSFlags &= ~SYSOPCHAT;
-				SendPrompt(Cinfo->Console->SysopChatStream, Cinfo->Console->SysopChatStream->UserPointer);
-				SendPrompt(Cinfo->Console, Cinfo->Console->UserPointer);
-				Cinfo->Console->SysopChatStream = 0;
-			}
-
-			CloseConsoleSupport(Cinfo);
-			
-			return (DefWindowProc(hWnd, message, wParam, lParam));
-
-		case WM_DESTROY:
-		
-			// Remove the subclass from the edit control. 
-
-			GetWindowRect(hWnd,	&ConsoleRect);	// For save soutine
-	
-            SetWindowLong(Cinfo->hwndInput, GWL_WNDPROC, 
-                (LONG) Cinfo->wpOrigInputProc); 
-         
-			if (cfgMinToTray) 
-				DeleteTrayMenuItem(hWnd);
-
-			if (Cinfo->Console && Cinfo->Console->Active)
-			{
-				ClearQueue(Cinfo->Console);
-		
-				Cinfo->Console->Active = FALSE;
-				RefreshMainWindow();
-
-				{
-					SendUnbuffered(Cinfo->Console->BPQStream, SignoffMsg, strlen(SignoffMsg));
-					if (Cinfo->Console->lastmsg > user->lastmsg)
-					{
-						user->lastmsg = Cinfo->Console->lastmsg;
-						SaveUserDatabase();
-					}
-				}
-			}
-
-			// Free Scrollback
-
-			for (i = 0; i < MAXSTACK ; i++)
-			{
-				if (Cinfo->KbdStack[i])
-				{
-					free(Cinfo->KbdStack[i]);
-					Cinfo->KbdStack[i] = NULL;
-				}
-			}
-
-			Sleep(500);
-
-			free(Cinfo->readbuff);
-			Cinfo->readbufflen = 0;
-
-			free(Cinfo->Console);
-			Cinfo->Console = 0;
-			Cinfo->hConsole = NULL;
-
-			break;
-
-
-			
-	case WM_INITMENUPOPUP:
-
-		if (wParam == (WPARAM)hBBSUSERCHAT)
-		{
-			// Set up Chat Menu
-
-			CIRCUIT * conn;
-			char MenuLine[30];
-			int n;
-
-			for (n = 0; n <= NumberofStreams-1; n++)
-			{
-				conn=&Connections[n];
-
-				RemoveMenu(hBBSUSERCHAT, BBSUSERCHAT + n, MF_BYCOMMAND);
-
 				if (conn->Active)
 				{
-					sprintf_s(MenuLine, 30, "%d %s", conn->BPQStream, conn->Callsign);
-					AppendMenu(hBBSUSERCHAT, MF_STRING, BBSUSERCHAT + n, MenuLine);
+					conn->BBSFlags |= SYSOPCHAT;
+					Cinfo->Console->SysopChatStream = conn;
+					SendUnbuffered(conn->BPQStream, chatMsg, strlen(chatMsg));
+
+
+	//				Disconnect(conn->BPQStream);
 				}
 			}
-			return TRUE;
-		}
-		break;
+
+			switch (wmId) {
+
+			case ENDUSERCHAT:
+
+				if (Cinfo->Console->SysopChatStream)
+				{
+					SendUnbuffered(Cinfo->Console->SysopChatStream->BPQStream, endChatMsg, strlen(endChatMsg));
+					Cinfo->Console->SysopChatStream->BBSFlags &= ~SYSOPCHAT;
+					SendPrompt(Cinfo->Console->SysopChatStream, Cinfo->Console->SysopChatStream->UserPointer);
+					SendPrompt(Cinfo->Console, Cinfo->Console->UserPointer);
+					Cinfo->Console->SysopChatStream = 0;
+				}
+
+				break;
+
+
+			case 40000:
+			{
+				int len=0;
+				HGLOBAL	hMem;
+				char * ptr;
+				CHARRANGE Range;
+
+				// Copy Rich Text Selection to Clipboard
+		
+				SendMessage(Cinfo->hwndOutput, EM_EXGETSEL , 0, (WPARAM)&Range);
+		
+				hMem=GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, Range.cpMax - Range.cpMin + 1);
+
+				if (hMem != 0)
+				{
+					ptr=GlobalLock(hMem);
+		
+					if (OpenClipboard(Cinfo->hConsole))
+					{
+						len = SendMessage(Cinfo->hwndOutput, EM_GETSELTEXT  , 0, (WPARAM)ptr);
+
+						GlobalUnlock(hMem);
+						EmptyClipboard();
+						SetClipboardData(CF_TEXT,hMem);
+						CloseClipboard();
+					}
+				}
+				else
+					GlobalFree(hMem);
+
+				SetFocus(Cinfo->hwndInput);
+				break;
+			}
+
+			case BPQBELLS:
+
+				ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->Bells, BPQBELLS);
+				Bells = Cinfo->Bells;
+				break;
+
+			case BPQFLASHONBELL:
+
+				ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->FlashOnBell, BPQFLASHONBELL);
+				FlashOnBell = Cinfo->FlashOnBell;
+				break;
+
+			case BPQStripLF:
+
+				ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->StripLF, BPQStripLF);
+				StripLF = Cinfo->StripLF;
+				break;
+
+			case IDM_WARNINPUT:
+
+				ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->WarnWrap, IDM_WARNINPUT);
+				WarnWrap = Cinfo->WarnWrap;
+				break;
+
+
+			case IDM_WRAPTEXT:
+
+				ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->WrapInput, IDM_WRAPTEXT);
+				Cinfo->WrapInput = WrapInput;
+				break;
+
+			case IDM_Flash:
+
+				ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->FlashOnConnect, IDM_Flash);
+				FlashOnConnect = Cinfo->FlashOnConnect;
+				break;
+
+			case IDM_CLOSEWINDOW:
+
+				ToggleParam(Cinfo->hMenu, hWnd, &Cinfo->CloseWindowOnBye, IDM_CLOSEWINDOW);
+				CloseWindowOnBye = Cinfo->CloseWindowOnBye;
+				break;
+
+			case BPQCLEAROUT:
+
+				for (i = 0; i < MAXLINES; i++)
+				{
+					Cinfo->OutputScreen[i][0] = 0;
+				}
+
+				Cinfo->CurrentLine = 0;
+				DoRefresh(Cinfo);
+				break;
+
+
+				SendMessage(Cinfo->hwndOutput,LB_RESETCONTENT, 0, 0);		
+				break;
+
+			case BPQCOPYOUT:
+			
+				CopyRichTextToClipboard(Cinfo->hwndOutput);
+				break;
+
+			//case BPQHELP:
+
+			//	HtmlHelp(hWnd,"BPQTerminal.chm",HH_HELP_FINDER,0);  
+			//	break;
+
+			default:
+
+				return 0;
+
+			}
+
+			case WM_SYSCOMMAND:
+				wmId    = LOWORD(wParam); // Remember, these are...
+				wmEvent = HIWORD(wParam); // ...different for Win32!
+
+				switch (wmId) { 
+					case SC_MINIMIZE: 
+						if (cfgMinToTray)
+							return ShowWindow(hWnd, SW_HIDE);		
+
+					default:
+						return (DefWindowProc(hWnd, message, wParam, lParam));
+				}
+		
+			case WM_SIZING:
+				lprc = (LPRECT) lParam;
+
+				Cinfo->Height = lprc->bottom-lprc->top;
+				Cinfo->Width = lprc->right-lprc->left;
+
+				MoveWindows(Cinfo);
+				
+				return TRUE;
+
+			case WM_SIZE:
+		
+				MoveWindows(Cinfo);		
+				return TRUE;
+			
+			case WM_CLOSE:
+
+		
+				if (Cinfo->Console->SysopChatStream)
+				{
+					SendUnbuffered(Cinfo->Console->SysopChatStream->BPQStream, endChatMsg, strlen(endChatMsg));
+					Cinfo->Console->SysopChatStream->BBSFlags &= ~SYSOPCHAT;
+					SendPrompt(Cinfo->Console->SysopChatStream, Cinfo->Console->SysopChatStream->UserPointer);
+					SendPrompt(Cinfo->Console, Cinfo->Console->UserPointer);
+					Cinfo->Console->SysopChatStream = 0;
+				}
+
+				CloseConsoleSupport(Cinfo);
+
+				return (DefWindowProc(hWnd, message, wParam, lParam));
+
+			case WM_DESTROY:
+				// Remove the subclass from the edit control. 
+				GetWindowRect(hWnd,	&ConsoleRect);	// For save soutine
+		        SetWindowLong(Cinfo->hwndInput, GWL_WNDPROC, 
+		            (LONG) Cinfo->wpOrigInputProc); 
+		     
+				if (cfgMinToTray) 
+					DeleteTrayMenuItem(hWnd);
+
+				if (Cinfo->Console && Cinfo->Console->Active) {
+					ClearQueue(Cinfo->Console);
+					Cinfo->Console->Active = FALSE;
+					RefreshMainWindow();
+
+					{
+						SendUnbuffered(Cinfo->Console->BPQStream, SignoffMsg, strlen(SignoffMsg));
+						if (Cinfo->Console->lastmsg > user->lastmsg) {
+							user->lastmsg = Cinfo->Console->lastmsg;
+							SaveUserDatabase();
+						}
+					}
+				}
+
+				// Free Scrollback
+
+				for (i = 0; i < MAXSTACK ; i++)
+				{
+					if (Cinfo->KbdStack[i])
+					{
+						free(Cinfo->KbdStack[i]);
+						Cinfo->KbdStack[i] = NULL;
+					}
+				}
+
+				Sleep(500);
+
+				free(Cinfo->readbuff);
+				Cinfo->readbufflen = 0;
+
+				free(Cinfo->Console);
+				Cinfo->Console = 0;
+				Cinfo->hConsole = NULL;
+
+				break;
+
+
+				
+		case WM_INITMENUPOPUP:
+
+			if (wParam == (WPARAM)hBBSUSERCHAT)
+			{
+				// Set up Chat Menu
+
+				CIRCUIT * conn;
+				char MenuLine[30];
+				int n;
+
+				for (n = 0; n <= NumberofStreams-1; n++)
+				{
+					conn=&Connections[n];
+
+					RemoveMenu(hBBSUSERCHAT, BBSUSERCHAT + n, MF_BYCOMMAND);
+
+					if (conn->Active)
+					{
+						sprintf_s(MenuLine, 30, "%d %s", conn->BPQStream, conn->Callsign);
+						AppendMenu(hBBSUSERCHAT, MF_STRING, BBSUSERCHAT + n, MenuLine);
+					}
+				}
+				return TRUE;
+			}
+			break;
 
 
 
-		default:
-			return (DefWindowProc(hWnd, message, wParam, lParam));
-
+			default:
+				return (DefWindowProc(hWnd, message, wParam, lParam));
 	}
+
 	return (0);
 }
 
 
-LRESULT APIENTRY InputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
-{ 
+LRESULT APIENTRY InputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)  {
 	int i;
 	unsigned int TextLen;
-	struct ConsoleInfo * Cinfo;
+	struct ConsoleInfo *Cinfo;
 
-	for (Cinfo = ConsHeader[0]; Cinfo; Cinfo = Cinfo->next)
-	{
+	for (Cinfo = ConsHeader[0]; Cinfo; Cinfo = Cinfo->next) {
 		if (Cinfo->hwndInput == hwnd)
 			break;
 	}

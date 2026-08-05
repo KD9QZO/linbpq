@@ -5,8 +5,7 @@
 
 // MAKE SURE SHORTS ARE CORRECTLY ALLIGNED FOR ARMV5
 
-struct PORTCONFIG
-{
+struct PORTCONFIG {
 	short PORTNUM;
 	char ID[30];			//2
 	short TYPE;			    // 32,
@@ -91,8 +90,7 @@ struct PORTCONFIG
 
 };
 
-struct ROUTECONFIG
-{
+struct ROUTECONFIG {
 	char call[80];		// May have VIA
 	int quality;
 	int port;
@@ -104,12 +102,11 @@ struct ROUTECONFIG
 	int NPR;
 	int nokeepalives;
 	int noV2point2;
-	char * tcphost;
+	char *tcphost;
 	int tcpport;
 };
 
-struct CONFIGTABLE
-{
+struct CONFIGTABLE {
 //	CONFIGURATION DATA STRUCTURE
 
 //	DEFINES LAYOUT OF CONFIG RECORD PRODUCED BY CONFIGURATION PROG
@@ -211,15 +208,13 @@ struct CONFIGTABLE
 
 };
 
-struct UPNP 
-{
-	struct UPNP * Next;
-	char * Protocol;
-	char * LANport;
-	char * WANPort;
+struct UPNP {
+	struct UPNP *Next;
+	char *Protocol;
+	char *LANport;
+	char *WANPort;
 };
 
+
 #endif
-
-
 
